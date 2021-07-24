@@ -164,14 +164,6 @@ class WidthCohesiveBanks(object):
         self.g = 9.805
         self.rho = 1000.
 
-    # UPDATE THIS BECAUSE OF RATING CURVE!!!!!!
-    def get_equilibriumWidth(self, Q_bf_eq):
-        b_eq = self.rho**(5/3.) * self.g**(7/6.) \
-               * self.S**(7/6.) * self.lambda_r**(1/6.) \
-               / (8.1 * (1 + self.Parker_epsilon)**(5/3.)) \
-               * Q_eq / self.tau_crit**(5/3.)
-        return b_eq
-
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
