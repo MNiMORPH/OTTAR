@@ -145,8 +145,8 @@ class DetachmentLimitedWidth(object):
     The classic case for the sand- and/or silt-bed river
     """
 
-    def __init__(self, h_banks, S, tau_crit, k_d, b0=None, Q0=None, 
-                 Parker_epsilon=0.2, intermittency=1., lambda_r=0.1):
+    def __init__(self, h_banks, S, tau_crit, k_d, b0=None, Qbf0=None, 
+                 Parker_epsilon=0.2, intermittency=1.):
         
         # Input variables
         self.h_banks = h_banks
@@ -155,30 +155,24 @@ class DetachmentLimitedWidth(object):
         self.k_d = k_d # Bank rate constant
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
-        self.lambda_r = lambda_r # Roughness (Cf, I think -- double check)
         
         # Constants
         self.g = 9.805
         self.rho = 1000.
         
-        # Derived constants
-        self.a1 = self.rho * self.g**.7 * self.S**.7 * self.lambda_r**.1 \
-                  / (8.1**.6 * (1+self.Parker_epsilon))
-
         # Initial conditions
-        if (b0 is not None and Q0 is not None) or (b0 is None and Q0 is None):
-            raise TypeError('You must specify exactly one of {b0, Q0}.')
+        if (b0 is not None and Qbf0 is not None) or (b0 is None and Q0 is None):
+            raise TypeError('You must specify exactly one of {b0, Qbf0}.')
         elif b0 is not None:
             self.b = [b0]
-            #self.Q0 = self.get_dischargeAtEquilibriumWidth(b0)
         else:
-            self.b = [self.get_equilibriumWidth(Q0)]
-            #self.Q0 = Q0
+            self.b = [self.get_equilibriumWidth(Qbf0)]
         # Variables for Q and b right now
         self.bi = self.b[-1]
-        self.Qi = None # self.Q0
+        self.Qi = None
 
-    def get_equilibriumWidth(self, Q_eq):
+    # UPDATE THIS BECAUSE OF RATING CURVE!!!!!!
+    def get_equilibriumWidth(self, Q_bf_eq):
         b_eq = self.rho**(5/3.) * self.g**(7/6.) \
                * self.S**(7/6.) * self.lambda_r**(1/6.) \
                / (8.1 * (1 + self.Parker_epsilon)**(5/3.)) \
