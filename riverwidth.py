@@ -3,7 +3,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-class TransportLimitedWidth(object):
+class WidthNoncohesiveBanks(object):
     """
     The classic case for the gravel-bed river.
     """
@@ -140,7 +140,7 @@ class TransportLimitedWidth(object):
         plt.show()
 
 
-class DetachmentLimitedWidth(object):
+class WidthCohesiveBanks(object):
     """
     The classic case for the sand- and/or silt-bed river
     """
@@ -260,7 +260,7 @@ class DetachmentLimitedWidth(object):
         plt.show()
 
 
-class RiverWidth(TransportLimitedWidth, DetachmentLimitedWidth):
+class RiverWidth(WidthNonohesiveBanks, WidthCohesiveBanks):
 
   def __init__(self, h_banks, S, D, b0=None, Q0=None, intermittency=1.):
       """
