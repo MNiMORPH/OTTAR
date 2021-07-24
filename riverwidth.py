@@ -168,10 +168,17 @@ class WidthCohesiveBanks(object):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize(self, t, Q):
+    def initialize_flow_calculations( channel_n, fp_k, fp_P ):
+        """
+        Hard-code for double Manning
+        """
+        self.hclass = FlowDepthDoubleManning()
+        self.hclass.initialize( channel_n, fp_k, fp_P,
+                                self.h_banks, self.b, self.S)
+
+    def initialize_timeseries(self, t, Q, ):
         self.t = list(t)
         self.Q = list(Q)
-        # b already equals the starting b
         
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         # Euler forward wtih dynamic inner-loop time stepping
