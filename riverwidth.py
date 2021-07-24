@@ -145,7 +145,7 @@ class WidthCohesiveBanks(object):
     The classic case for the sand- and/or silt-bed river
     """
 
-    def __init__(self, h_banks, S, tau_crit, k_d, b0=None, Qbf0=None, 
+    def __init__(self, h_banks, S, tau_crit, k_d, b0, 
                  Parker_epsilon=0.2, intermittency=1.):
         
         # Input variables
@@ -156,20 +156,13 @@ class WidthCohesiveBanks(object):
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
         
+        # Input variable as initial state in list
+        self.b = [b0]
+        self.bi = self.b[-1]
+
         # Constants
         self.g = 9.805
         self.rho = 1000.
-        
-        # Initial conditions
-        if (b0 is not None and Qbf0 is not None) or (b0 is None and Q0 is None):
-            raise TypeError('You must specify exactly one of {b0, Qbf0}.')
-        elif b0 is not None:
-            self.b = [b0]
-        else:
-            self.b = [self.get_equilibriumWidth(Qbf0)]
-        # Variables for Q and b right now
-        self.bi = self.b[-1]
-        self.Qi = None
 
     # UPDATE THIS BECAUSE OF RATING CURVE!!!!!!
     def get_equilibriumWidth(self, Q_bf_eq):
