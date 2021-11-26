@@ -8,7 +8,7 @@ class WidthNoncohesiveBanks(object):
     The classic case for the gravel-bed river.
     """
 
-    def __init__(self, h_banks, S, D, b0=None, Q0=None, 
+    def __init__(self, h_banks, S, D, k_n, b0=None, Q0=None, 
                  Parker_epsilon=0.2, intermittency=1.):
         """
         :param h_banks: The height of the wall(s) immediately next to the river.
@@ -41,6 +41,7 @@ class WidthNoncohesiveBanks(object):
         self.D = D
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
+        self.k_n = k_n # Narrowing coefficient
         
         # Constants
         self.MPM_phi = 3.97
@@ -49,6 +50,7 @@ class WidthNoncohesiveBanks(object):
         self.rho = 1000.
         self.tau_star_crit = 0.0495
         self.SSG = (self.rho_s - self.rho) / self.rho
+        self.porosity = 0.35
         
         # Derived constants
         self.k_b__eq = 0.17 / ( self.g**.5 * self.SSG**(5/3.)
@@ -93,7 +95,57 @@ class WidthNoncohesiveBanks(object):
                           * (self.Qi / self.bi)**.6 \
                           / (1. + self.Parker_epsilon)
         return tau_star_bank
-            
+
+    def widen(self):
+        """
+        Widen a river channel based on the shear stress (compared to a
+        threshold) at the bank
+        """
+        self.tau_star_bank = self.get_bankShieldsStress()
+        self.bi = self.b[-1]
+        if tau_star_bank > self.tau_star_crit:
+            self.bi += ( tau_star_bank - self.tau_star_crit )**(3/2.) \
+                     * dt * self.intermittency / self.h_banks
+    
+    def narrow(self):
+        """
+        Narrow based turbulent diffusion of sediment towards the banks
+        (easy to visualizes for suspended load, more of a discrete Brownian
+        process for bed load)
+        """
+        
+        # Shear velocities and bed (center) shear stress
+        # A bit of redundancy lies within
+        self.tau_star_bank = self.get_bankShieldsStress()
+        self.bi = self.b[-1]
+        self.tau_bank = self.tau_star_bank * (self.SSG * self.g * self.D)
+        self.u_star_bank = (self.tau_bank / self.rho)**.5
+        self.tau_bed = self.rho * self.g * self.h * self.S
+        self.tau_star_bed = self.tau_bed / (self.SSG * self.g * self.D)
+        self.u_star_bed = (self.tau_bed / self.rho)**.5
+        self.u_star_crit = ( self.tau_star_crit * 
+                             (self.SSG * self.g * self.D) 
+                             / self.rho )**.5
+        
+        # Sediment concentrations
+        # Assuming in this case that it is bed load
+        if self.tau_star_bed > self.tau_star_crit:
+            sed_conc_center_prop = (self.u_star_bed - self.u_star_crit)**3
+        else:
+            sed_conc_center_prop = 0.
+        if self.tau_star_bank > self.tau_star_crit:
+            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit)**3
+        else:
+            sed_conc_center_prop = 0.
+        
+        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
+                                / self.bi
+                                
+        self.qsy = k_n * sed_conc_grad_prop
+
+        self.narrowing = self.qsy / ( self.porosity * self.h )
+      
+        
     def initialize(self, t, Q):
         self.t = list(t)
         self.Q = list(Q)
@@ -101,14 +153,14 @@ class WidthNoncohesiveBanks(object):
         
     def update(self, dt, Qi):
         # Simple Euler forward.
-        # Only widening; no narrowing
-        self.bi = self.b[-1]
         # Current discharge
         self.Qi = Qi
-        tau_star_bank = self.get_bankShieldsStress()
-        if tau_star_bank > self.tau_star_crit:
-            self.bi += ( tau_star_bank - self.tau_star_crit )**(3/2.) \
-                     * dt * self.intermittency / self.h_banks
+        # The order matters here; how to manage this?
+        # Maybe don't update the channel width right away
+        # Compute narrowing
+        self.narrow()
+        # Compute widening
+        self.widen()
         self.b.append(self.bi)
 
     def run(self):
