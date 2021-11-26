@@ -8,7 +8,7 @@ class WidthNoncohesiveBanks(object):
     The classic case for the gravel-bed river.
     """
 
-    def __init__(self, h_banks, S, D, k_n, b0=None, Q0=None, 
+    def __init__(self, h_banks, S, D, k_n=None, b0=None, Q0=None, 
                  Parker_epsilon=0.2, intermittency=1.):
         """
         :param h_banks: The height of the wall(s) immediately next to the river.
@@ -101,11 +101,11 @@ class WidthNoncohesiveBanks(object):
         Widen a river channel based on the shear stress (compared to a
         threshold) at the bank
         """
-        self.tau_star_bank = self.get_bankShieldsStress()
+        tau_star_bank = self.get_bankShieldsStress()
         self.bi = self.b[-1]
         if tau_star_bank > self.tau_star_crit:
             self.bi += ( tau_star_bank - self.tau_star_crit )**(3/2.) \
-                     * dt * self.intermittency / self.h_banks
+                     * self.dt * self.intermittency / self.h_banks
     
     def narrow(self):
         """
@@ -116,9 +116,9 @@ class WidthNoncohesiveBanks(object):
         
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
-        self.tau_star_bank = self.get_bankShieldsStress()
+        tau_star_bank = self.get_bankShieldsStress()
         self.bi = self.b[-1]
-        self.tau_bank = self.tau_star_bank * (self.SSG * self.g * self.D)
+        self.tau_bank = tau_star_bank * (self.SSG * self.g * self.D)
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.rho * self.g * self.h * self.S
         self.tau_star_bed = self.tau_bed / (self.SSG * self.g * self.D)
@@ -143,7 +143,7 @@ class WidthNoncohesiveBanks(object):
                                 
         self.qsy = k_n * sed_conc_grad_prop
 
-        self.narrowing = self.qsy / ( self.porosity * self.h )
+        self.narrowing = self.qsy * self.dt / ( self.porosity * self.h )
       
         
     def initialize(self, t, Q):
@@ -153,12 +153,13 @@ class WidthNoncohesiveBanks(object):
         
     def update(self, dt, Qi):
         # Simple Euler forward.
+        self.dt = dt
         # Current discharge
         self.Qi = Qi
         # The order matters here; how to manage this?
         # Maybe don't update the channel width right away
-        # Compute narrowing
-        self.narrow()
+        # Compute narrowing -- don't include until it is ready!
+        #self.narrow()
         # Compute widening
         self.widen()
         self.b.append(self.bi)
@@ -304,7 +305,7 @@ class WidthCohesiveBanks(object):
         plt.show()
 
 
-class RiverWidth(WidthNonohesiveBanks, WidthCohesiveBanks):
+class RiverWidth(WidthNoncohesiveBanks, WidthCohesiveBanks):
 
   def __init__(self, h_banks, S, D, b0=None, Q0=None, intermittency=1.):
       """
