@@ -284,7 +284,6 @@ class WidthCohesiveBanks(object):
                                 / self.bi
 
         self.qsy = self.k_n * sed_conc_grad_prop
-        print (self.qsy)
         # 2* because erosion & deposition are symmetrical across banks
         self.db_narrowing = 2*self.qsy*self.dt / ( self.porosity*self.h_banks )
 
@@ -295,7 +294,7 @@ class WidthCohesiveBanks(object):
         """
         dt_outer = dt
         bi_outer = self.b[-1]
-        self.hclass.set_b( self.b[-1] )
+        self.hclass.set_b( bi_outer )
         h = self.hclass.compute_depth( Qi )
         self.tau_bank = self.rho * self.g * h * self.S / (1 + self.Parker_epsilon)
         if self.tau_bank > self.tau_crit:
@@ -331,7 +330,7 @@ class WidthCohesiveBanks(object):
         """
         self.bi = self.b[-1]
         # Update for the Manning calc
-        self.hclass.set_b( self.b[-1] )
+        self.hclass.set_b( self.bi )
         # Might find a different way for this going forward
         self.dt = dt
         # Current discharge and shear stress
