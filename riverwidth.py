@@ -8,7 +8,7 @@ class WidthNoncohesiveBanks(object):
     The classic case for the gravel-bed river.
     """
 
-    def __init__(self, h_banks, S, D, k_n=None, b0=None, Q0=None, 
+    def __init__(self, h_banks, S, D, k_n=0., b0=None, Q0=None, 
                  Parker_epsilon=0.2, intermittency=1.):
         """
         :param h_banks: The height of the wall(s) immediately next to the river.
@@ -114,6 +114,8 @@ class WidthNoncohesiveBanks(object):
         Narrow based turbulent diffusion of sediment towards the banks
         (easy to visualizes for suspended load, more of a discrete Brownian
         process for bed load)
+        
+        Here for bed load
         """
         
         # Shear velocities and bed (center) shear stress
@@ -156,8 +158,6 @@ class WidthNoncohesiveBanks(object):
         self.dt = dt
         # Current discharge
         self.Qi = Qi
-        # The order matters here; how to manage this?
-        # Maybe don't update the channel width right away
         # Compute narrowing -- don't include until it is ready!
         #self.narrow()
         # Compute widening
@@ -200,7 +200,7 @@ class WidthCohesiveBanks(object):
     The classic case for the sand- and/or silt-bed river
     """
 
-    def __init__(self, h_banks, S, tau_crit, k_d, b0, 
+    def __init__(self, h_banks, S, tau_crit, k_d, b0, k_n=0.,
                  Parker_epsilon=0.2, intermittency=1.):
         
         # Input variables
@@ -218,6 +218,7 @@ class WidthCohesiveBanks(object):
         # Constants
         self.g = 9.805
         self.rho = 1000.
+        self.porosity = 0.35
 
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
@@ -231,10 +232,47 @@ class WidthCohesiveBanks(object):
         self.hclass.initialize( channel_n, fp_k, fp_P,
                                 self.h_banks, self.b, self.S)
 
-    def initialize_timeseries(self, t, Q, ):
+    def initialize_timeseries(self, t, Q):
         self.t = list(t)
         self.Q = list(Q)
         
+    def widen(self):
+        """
+        Widen a river channel based on the shear stress (compared to a
+        threshold) at the bank
+        """
+        if self.tau_bank > self.tau_crit:
+            self.db_widening = self.k_d/self.h_banks \
+                                 * ( self.tau_bank - self.tau_crit ) \
+                                 * dt * self.intermittency
+        else:
+            self.db_widening = 0.
+    
+    def narrow(self):
+        """
+        Narrow based turbulent diffusion of sediment towards the banks
+        (easy to visualize for suspended load, more of a discrete Brownian
+        process for bed load)
+        
+        Here for suspended load
+        """
+        
+        # Shear velocities and bed (center) shear stress
+        # A bit of redundancy lies within
+        self.u_star_bank = (self.tau_bank / self.rho)**.5
+        self.tau_bed = self.rho * self.g * self.h_banks * self.S
+        self.u_star_bed = (self.tau_bed / self.rho)**.5
+        
+        # Sediment concentrations
+        sed_conc_center_prop = (self.u_star_bed)**3.5
+        sed_conc_edge_prop = (self.u_star_bank)**3.5
+        
+        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
+                                / self.bi
+                                
+        self.qsy = self.k_n * sed_conc_grad_prop
+        self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
+
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         # Euler forward wtih dynamic inner-loop time stepping
         # Only widening; no narrowing
@@ -266,16 +304,19 @@ class WidthCohesiveBanks(object):
 
     def update__simple_time_step(self, dt, Qi):
         # Simple Euler forward.
-        # Only widening; no narrowing
         self.bi = self.b[-1]
-        # Current discharge
+        # Current discharge and shear stress
+        # Is this updated for the rating-curve 2x Manning approach?
         self.Qi = Qi
         self.tau_bank = self.a1 * (self.Qi/self.bi)**.6
-        if self.tau_bank > self.tau_crit:
-            self.bi += self.k_d/self.h_banks \
-                          * ( self.tau_bank - self.tau_crit ) \
-                          * dt * self.intermittency
-        self.b.append(self.bi)
+        # Compute widening
+        self.widen()
+        #self.b.append(self.bi + self.db_widening)
+        self.narrow()
+        self.b.append(self.bi + self.db_widening - self.db_narrowing)
+
+
+
 
     def run(self):
         # Start at 1: time 0 has the initial conditions
