@@ -255,7 +255,7 @@ class WidthCohesiveBanks(object):
         """
         if self.tau_bank > self.tau_crit:
             # 2* because erosion & deposition are symmetrical across banks
-            self.db_widening = 2*self.k_d/self.h_banks \
+            self.db_widening = 2*self.k_d*self.h/self.h_banks \
                                  * ( self.tau_bank - self.tau_crit ) \
                                  * self.dt * self.intermittency
         else:
@@ -338,6 +338,7 @@ class WidthCohesiveBanks(object):
         h = self.hclass.compute_depth( Qi )
         self.tau_bank = self.rho * self.g * h * self.S \
                 / (1 + self.Parker_epsilon)
+        self.h = h # For the widening, at least for now
         # Compute widening
         self.widen()
         #self.b.append(self.bi + self.db_widening)
@@ -353,8 +354,8 @@ class WidthCohesiveBanks(object):
                 dt = (self.t[i] - self.t[i-1]).total_seconds()
             except:
                 dt = (self.t[i] - self.t[i-1])
-            #self.update(dt, self.Q[i])
-            self.update__simple_time_step(dt, self.Q[i])
+            self.update(dt, self.Q[i])
+            #self.update__simple_time_step(dt, self.Q[i])
 
     def finalize(self):
         self.t = np.array(self.t)
