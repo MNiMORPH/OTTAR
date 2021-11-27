@@ -73,6 +73,9 @@ class WidthNoncohesiveBanks(object):
         self.Qi = self.Q0
 
     def get_equilibriumWidth(self, Q_eq):
+        """
+        Steady-state width under erosion only as t-->infinity
+        """
         b_eq = self.k_b__eq * Q_eq * self.S**(7/6.) / self.D**1.5
         return b_eq
 
@@ -231,7 +234,7 @@ class WidthCohesiveBanks(object):
         self.g = 9.805
         self.rho = 1000.
         self.porosity = 0.35
-
+        
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
@@ -244,9 +247,23 @@ class WidthCohesiveBanks(object):
         self.hclass.initialize( channel_n, fp_k, fp_P,
                                 self.h_banks, self.b[-1], self.S)
 
+        # Derived constant -- Manning's n required
+        self.k_b__eq = ( self.rho * self.g /
+                         ((1+self.Parker_epsilon) * self.tau_crit) )**(5/3.) \
+                       * channel_n
+
     def initialize_timeseries(self, t, Q):
         self.t = list(t)
         self.Q = list(Q)
+
+    def get_equilibriumWidth(self, Q_eq):
+        """
+        Steady-state width under erosion only as t-->infinity
+        Only in-channel flow: Using this as bankfull
+        No form drag assumed
+        """
+        b_eq = self.k_b__eq * Q_eq * self.S**(7/6.)
+        return b_eq
 
     def widen(self):
         """
@@ -354,8 +371,8 @@ class WidthCohesiveBanks(object):
                 dt = (self.t[i] - self.t[i-1]).total_seconds()
             except:
                 dt = (self.t[i] - self.t[i-1])
-            self.update(dt, self.Q[i])
-            #self.update__simple_time_step(dt, self.Q[i])
+            #self.update(dt, self.Q[i])
+            self.update__simple_time_step(dt, self.Q[i])
 
     def finalize(self):
         self.t = np.array(self.t)
