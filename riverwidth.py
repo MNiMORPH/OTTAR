@@ -168,25 +168,28 @@ class WidthCohesiveBanks(object):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize_flow_calculations( channel_n, fp_k, fp_P ):
+    def initialize_flow_calculations(self, channel_n, fp_k, fp_P ):
         """
         Hard-code for double Manning
         """
         self.hclass = FlowDepthDoubleManning()
         self.hclass.initialize( channel_n, fp_k, fp_P,
-                                self.h_banks, self.b, self.S)
+                                self.h_banks, self.b[-1], self.S)
 
     def initialize_timeseries(self, t, Q, ):
         self.t = list(t)
         self.Q = list(Q)
         
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
-        # Euler forward wtih dynamic inner-loop time stepping
-        # Only widening; no narrowing
+        """
+        Euler forward wtih dynamic inner-loop time stepping
+        Only widening; no narrowing
+        """
         dt_outer = dt
         bi_outer = self.b[-1]
-        self.Qi = Qi
-        self.tau_bank = self.a1 * (self.Qi/bi_outer)**.6
+        self.hclass.set_b( self.b[-1] )
+        h = self.hclass.compute_depth( Qi )
+        self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
         if self.tau_bank > self.tau_crit:
             self.bi = self.b[-1]
             dt_remaining = dt
@@ -195,31 +198,38 @@ class WidthCohesiveBanks(object):
                     raise RuntimeError('More time used than allowed. '
                                           +str(dt_remaining)
                                           +' seconds remaining')
-                self.tau_bank = self.a1 * (self.Qi/self.bi)**.6
-                dbdt = self.k_d/self.h_banks \
+                self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
+                dbdt = 2*self.k_d*h/self.h_banks \
                            * ( self.tau_bank - self.tau_crit ) \
                            * self.intermittency
-                b_eq = self.get_equilibriumWidth(self.Qi)
+                """
+                b_eq = np.inf # self.get_equilibriumWidth(self.Qi)
                 dt_to_cutoff = max_fract_to_equilib * (b_eq - self.bi) / dbdt
                 dt_inner = np.min((dt_to_cutoff, dt_remaining))
-                self.bi += self.k_d/self.h_banks \
+                self.bi += self.k_d/self.hself.b[-1]_banks \
                               * ( self.tau_bank - self.tau_crit ) \
                               * dt_inner * self.intermittency
                 dt_remaining -= dt_inner
                 #print(dt_remaining, self.bi, b_eq)
+                """
+                self.bi += dbdt * dt_outer
+                dt_remaining = 0 # Perhaps return inner loop later
         self.b.append(self.bi)
 
     def update__simple_time_step(self, dt, Qi):
-        # Simple Euler forward.
-        # Only widening; no narrowing
+        """
+        Simple Euler forward.
+        Only widening; no narrowing
+        """
         self.bi = self.b[-1]
+        self.hclass.set_b( self.b[-1] )
         # Current discharge
-        self.Qi = Qi
-        self.tau_bank = self.a1 * (self.Qi/self.bi)**.6
+        h = self.hclass.compute_depth( Qi )
+        self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
         if self.tau_bank > self.tau_crit:
-            self.bi += self.k_d/self.h_banks \
-                          * ( self.tau_bank - self.tau_crit ) \
-                          * dt * self.intermittency
+            self.bi += 2*self.k_d*h/self.h_banks \
+                           * ( self.tau_bank - self.tau_crit ) \
+                           * self.intermittency
         self.b.append(self.bi)
 
     def run(self):
@@ -252,7 +262,7 @@ class WidthCohesiveBanks(object):
         plt.show()
 
 
-class RiverWidth(WidthNonohesiveBanks, WidthCohesiveBanks):
+class RiverWidth(WidthNoncohesiveBanks, WidthCohesiveBanks):
 
   def __init__(self, h_banks, S, D, b0=None, Q0=None, intermittency=1.):
       """
