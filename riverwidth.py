@@ -81,11 +81,19 @@ class WidthNoncohesiveBanks(object):
         return Q_eq
 
     def get_depth(self):
+        """
+        Deprecation Likely! (Manning Q input)
+        Or maybe a simplified function for finding the depth *WITHIN* the
+        channel (ONLY!)
+        """
         kh = D**.1 / (2.9 * g**.3 * S**.3)
         h = kh * (self.Qi / self.bi[-1])**0.6
         return h
 
     def get_bedShieldsStress(self):
+        """
+        Similar deprecation concern to get_depth(), above
+        """
         h = get_depth(self)
         tau_star_bed = h * self.S / ( self.SSG * D)
         return tau_star_bed
@@ -312,12 +320,14 @@ class WidthCohesiveBanks(object):
     def update__simple_time_step(self, dt, Qi):
         """
         Simple Euler forward.
+        Has widening and narrowing.
         """
         self.bi = self.b[-1]
         # Current discharge and shear stress
         # Is this updated for the rating-curve 2x Manning approach?
         self.Qi = Qi
-        self.tau_bank = self.a1 * (self.Qi/self.bi)**.6
+        self.tau_bank = self.rho * self.g * h * self.S \
+                / (1 - self.Parker_epsilon)
         # Compute widening
         self.widen()
         #self.b.append(self.bi + self.db_widening)
