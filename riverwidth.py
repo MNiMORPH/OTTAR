@@ -273,7 +273,7 @@ class WidthCohesiveBanks(object):
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
         self.u_star_bank = (self.tau_bank / self.rho)**.5
-        self.tau_bed = self.rho * self.g * self.h_banks * self.S
+        self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
 
         # Sediment concentrations
@@ -284,6 +284,7 @@ class WidthCohesiveBanks(object):
                                 / self.bi
 
         self.qsy = self.k_n * sed_conc_grad_prop
+        print (self.qsy)
         # 2* because erosion & deposition are symmetrical across banks
         self.db_narrowing = 2*self.qsy*self.dt / ( self.porosity*self.h_banks )
 
@@ -296,7 +297,7 @@ class WidthCohesiveBanks(object):
         bi_outer = self.b[-1]
         self.hclass.set_b( self.b[-1] )
         h = self.hclass.compute_depth( Qi )
-        self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
+        self.tau_bank = self.rho * self.g * h * self.S / (1 + self.Parker_epsilon)
         if self.tau_bank > self.tau_crit:
             self.bi = self.b[-1]
             dt_remaining = dt
@@ -305,7 +306,7 @@ class WidthCohesiveBanks(object):
                     raise RuntimeError('More time used than allowed. '
                                           +str(dt_remaining)
                                           +' seconds remaining')
-                self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
+                self.tau_bank = self.rho * self.g * h * self.S / (1 + self.Parker_epsilon)
                 dbdt = 2*self.k_d*h/self.h_banks \
                            * ( self.tau_bank - self.tau_crit ) \
                            * self.intermittency
@@ -337,7 +338,7 @@ class WidthCohesiveBanks(object):
         # Is this updated for the rating-curve 2x Manning approach?
         h = self.hclass.compute_depth( Qi )
         self.tau_bank = self.rho * self.g * h * self.S \
-                / (1 - self.Parker_epsilon)
+                / (1 + self.Parker_epsilon)
         # Compute widening
         self.widen()
         #self.b.append(self.bi + self.db_widening)
