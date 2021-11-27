@@ -218,6 +218,7 @@ class WidthCohesiveBanks(object):
         self.k_d = k_d # Bank rate constant
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
+        self.k_n = k_n # Narrowing coefficient
 
         # Input variable as initial state in list
         self.b = [b0]
@@ -250,9 +251,9 @@ class WidthCohesiveBanks(object):
         threshold) at the bank
         """
         if self.tau_bank > self.tau_crit:
-            self.db_widening = self.k_d/self.h_banks \
+            self.db_widening = 2*self.k_d/self.h_banks \
                                  * ( self.tau_bank - self.tau_crit ) \
-                                 * dt * self.intermittency
+                                 * self.dt * self.intermittency
         else:
             self.db_widening = 0.
 
@@ -323,9 +324,13 @@ class WidthCohesiveBanks(object):
         Has widening and narrowing.
         """
         self.bi = self.b[-1]
+        # Update for the Manning calc
+        self.hclass.set_b( self.b[-1] )
+        # Might find a different way for this going forward
+        self.dt = dt
         # Current discharge and shear stress
         # Is this updated for the rating-curve 2x Manning approach?
-        self.Qi = Qi
+        h = self.hclass.compute_depth( Qi )
         self.tau_bank = self.rho * self.g * h * self.S \
                 / (1 - self.Parker_epsilon)
         # Compute widening
@@ -343,7 +348,8 @@ class WidthCohesiveBanks(object):
                 dt = (self.t[i] - self.t[i-1]).total_seconds()
             except:
                 dt = (self.t[i] - self.t[i-1])
-            self.update(dt, self.Q[i])
+            #self.update(dt, self.Q[i])
+            self.update__simple_time_step(dt, self.Q[i])
 
     def finalize(self):
         self.t = np.array(self.t)
