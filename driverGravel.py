@@ -1,5 +1,4 @@
-import riverwidth
-from matplotlib import pyplot as plt
+import riverwidth as rw
 import importlib
 importlib.reload(riverwidth)
 
@@ -13,4 +12,3 @@ rw.initialize(t,Q)
 rw.run()
 rw.finalize()
 rw.plot()
-

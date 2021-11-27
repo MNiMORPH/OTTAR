@@ -21,17 +21,17 @@ widthData = pd.read_csv('DevonLibby_Table3-3_Reach3.csv')
 widthData['Year'] = pd.to_datetime(widthData['Year'], format='%Y')
 widthData = widthData.sort_values('Year')
 
-dlw = rw.DetachmentLimitedWidth(h_banks=1., S=1E-4, tau_crit=7., k_d=4E-6,
-                                lambda_r=.1, b0=55.)
-
-#t = list(data['Timestamp'])*15
-#Q = list(data['Discharge (cfs)'] * cfs_to_m3s)*15
-#t = np.arange(0, seconds_in_day*len(Q), seconds_in_day)
+dlw = rw.WidthCohesiveBanks(h_banks=5., S=1E-4, tau_crit=8., k_d=2E-6,
+                                b0=60.)
 
 t = data['Timestamp']
 Q = data['Discharge (cfs)'] * cfs_to_m3s
 
-dlw.initialize(t, Q)
+# Params are from JORDAN gauge. Fix this before continuing.
+#dlw.initialize_flow_calculations(0.030857097939076584, 183.21859785867875, 1.4791019236638066)
+#dlw.initialize_flow_calculations(0.02644893940365712, 183.21914260177212, 1.4791001832023956)
+
+dlw.initialize_timeseries(t, Q)
 dlw.run()
 dlw.finalize()
 

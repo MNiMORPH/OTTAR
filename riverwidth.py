@@ -8,7 +8,7 @@ class WidthNoncohesiveBanks(object):
     The classic case for the gravel-bed river.
     """
 
-    def __init__(self, h_banks, S, D, k_n=0., b0=None, Q0=None, 
+    def __init__(self, h_banks, S, D, k_n=0., b0=None, Q0=None,
                  Parker_epsilon=0.2, intermittency=1.):
         """
         :param h_banks: The height of the wall(s) immediately next to the river.
@@ -28,13 +28,13 @@ class WidthNoncohesiveBanks(object):
             channel. Equals (tau_b/tau_c) - 1, at an equilibrium channel width.
             [unitless: stress per stress, minus one]
         :type Parker_epsilon: float
-        :param intermittency: The fraction of time that the river spends in a 
+        :param intermittency: The fraction of time that the river spends in a
             geomorphically effective flood of the given stage. This is needed
             only when a characteristic flood, rather than a full hydrograph,
             is given. [unitless: time per time]
         :type intermittency float
         """
-        
+
         # Input variables
         self.h_banks = h_banks
         self.S = S
@@ -42,7 +42,7 @@ class WidthNoncohesiveBanks(object):
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
         self.k_n = k_n # Narrowing coefficient
-        
+
         # Constants
         self.MPM_phi = 3.97
         self.g = 9.805
@@ -51,7 +51,7 @@ class WidthNoncohesiveBanks(object):
         self.tau_star_crit = 0.0495
         self.SSG = (self.rho_s - self.rho) / self.rho
         self.porosity = 0.35
-        
+
         # Derived constants
         self.k_b__eq = 0.17 / ( self.g**.5 * self.SSG**(5/3.)
                                 * (1 + self.Parker_epsilon)**(5/3.)
@@ -79,12 +79,12 @@ class WidthNoncohesiveBanks(object):
     def get_dischargeAtEquilibriumWidth(self, b_eq):
         Q_eq = (b_eq / self.k_b__eq) * (self.D**1.5 / self.S**(7/6.))
         return Q_eq
-    
+
     def get_depth(self):
         kh = D**.1 / (2.9 * g**.3 * S**.3)
         h = kh * (self.Qi / self.bi[-1])**0.6
         return h
-    
+
     def get_bedShieldsStress(self):
         h = get_depth(self)
         tau_star_bed = h * self.S / ( self.SSG * D)
@@ -108,16 +108,16 @@ class WidthNoncohesiveBanks(object):
                                  * self.dt * self.intermittency / self.h_banks
         else:
             self.db_widening = 0.
-    
+
     def narrow(self):
         """
         Narrow based turbulent diffusion of sediment towards the banks
         (easy to visualizes for suspended load, more of a discrete Brownian
         process for bed load)
-        
+
         Here for bed load
         """
-        
+
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
         tau_star_bank = self.get_bankShieldsStress()
@@ -127,10 +127,10 @@ class WidthNoncohesiveBanks(object):
         self.tau_bed = self.rho * self.g * self.h_banks * self.S
         self.tau_star_bed = self.tau_bed / (self.SSG * self.g * self.D)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
-        self.u_star_crit = ( self.tau_star_crit * 
-                             (self.SSG * self.g * self.D) 
+        self.u_star_crit = ( self.tau_star_crit *
+                             (self.SSG * self.g * self.D)
                              / self.rho )**.5
-        
+
         # Sediment concentrations
         # Assuming in this case that it is bed load
         if self.tau_star_bed > self.tau_star_crit:
@@ -141,18 +141,18 @@ class WidthNoncohesiveBanks(object):
             sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit)**3
         else:
             sed_conc_edge_prop = 0.
-        
+
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
                                 / self.bi
-                                
+
         self.qsy = self.k_n * sed_conc_grad_prop
         self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
-        
+
     def initialize(self, t, Q):
         self.t = list(t)
         self.Q = list(Q)
         # b already equals the starting b
-        
+
     def update(self, dt, Qi):
         # Simple Euler forward.
         self.dt = dt
@@ -202,7 +202,7 @@ class WidthCohesiveBanks(object):
 
     def __init__(self, h_banks, S, tau_crit, k_d, b0, k_n=0.,
                  Parker_epsilon=0.2, intermittency=1.):
-        
+
         # Input variables
         self.h_banks = h_banks
         self.S = S
@@ -210,7 +210,7 @@ class WidthCohesiveBanks(object):
         self.k_d = k_d # Bank rate constant
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
-        
+
         # Input variable as initial state in list
         self.b = [b0]
         self.bi = self.b[-1]
@@ -224,18 +224,18 @@ class WidthCohesiveBanks(object):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize_flow_calculations( channel_n, fp_k, fp_P ):
+    def initialize_flow_calculations(self, channel_n, fp_k, fp_P ):
         """
         Hard-code for double Manning
         """
         self.hclass = FlowDepthDoubleManning()
         self.hclass.initialize( channel_n, fp_k, fp_P,
-                                self.h_banks, self.b, self.S)
+                                self.h_banks, self.b[-1], self.S)
 
     def initialize_timeseries(self, t, Q):
         self.t = list(t)
         self.Q = list(Q)
-        
+
     def widen(self):
         """
         Widen a river channel based on the shear stress (compared to a
@@ -247,39 +247,42 @@ class WidthCohesiveBanks(object):
                                  * dt * self.intermittency
         else:
             self.db_widening = 0.
-    
+
     def narrow(self):
         """
         Narrow based turbulent diffusion of sediment towards the banks
         (easy to visualize for suspended load, more of a discrete Brownian
         process for bed load)
-        
+
         Here for suspended load
         """
-        
+
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.rho * self.g * self.h_banks * self.S
         self.u_star_bed = (self.tau_bed / self.rho)**.5
-        
+
         # Sediment concentrations
         sed_conc_center_prop = (self.u_star_bed)**3.5
         sed_conc_edge_prop = (self.u_star_bank)**3.5
-        
+
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
                                 / self.bi
-                                
+
         self.qsy = self.k_n * sed_conc_grad_prop
         self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
-        # Euler forward wtih dynamic inner-loop time stepping
-        # Only widening; no narrowing
+        """
+        Euler forward wtih dynamic inner-loop time stepping
+        Only widening; no narrowing
+        """
         dt_outer = dt
         bi_outer = self.b[-1]
-        self.Qi = Qi
-        self.tau_bank = self.a1 * (self.Qi/bi_outer)**.6
+        self.hclass.set_b( self.b[-1] )
+        h = self.hclass.compute_depth( Qi )
+        self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
         if self.tau_bank > self.tau_crit:
             self.bi = self.b[-1]
             dt_remaining = dt
@@ -288,22 +291,28 @@ class WidthCohesiveBanks(object):
                     raise RuntimeError('More time used than allowed. '
                                           +str(dt_remaining)
                                           +' seconds remaining')
-                self.tau_bank = self.a1 * (self.Qi/self.bi)**.6
-                dbdt = self.k_d/self.h_banks \
+                self.tau_bank = self.rho * self.g * h * self.S / (1 - self.Parker_epsilon)
+                dbdt = 2*self.k_d*h/self.h_banks \
                            * ( self.tau_bank - self.tau_crit ) \
                            * self.intermittency
-                b_eq = self.get_equilibriumWidth(self.Qi)
+                """
+                b_eq = np.inf # self.get_equilibriumWidth(self.Qi)
                 dt_to_cutoff = max_fract_to_equilib * (b_eq - self.bi) / dbdt
                 dt_inner = np.min((dt_to_cutoff, dt_remaining))
-                self.bi += self.k_d/self.h_banks \
+                self.bi += self.k_d/self.hself.b[-1]_banks \
                               * ( self.tau_bank - self.tau_crit ) \
                               * dt_inner * self.intermittency
                 dt_remaining -= dt_inner
                 #print(dt_remaining, self.bi, b_eq)
+                """
+                self.bi += dbdt * dt_outer
+                dt_remaining = 0 # Perhaps return inner loop later
         self.b.append(self.bi)
 
     def update__simple_time_step(self, dt, Qi):
-        # Simple Euler forward.
+        """
+        Simple Euler forward.
+        """
         self.bi = self.b[-1]
         # Current discharge and shear stress
         # Is this updated for the rating-curve 2x Manning approach?
@@ -365,7 +374,7 @@ class RiverWidth(WidthNoncohesiveBanks, WidthCohesiveBanks):
       :param Q0: "Initial" discharge from which to compute an equilibrium
           initial channel width. [m^3/s]
       :type Q0: float
-      :param intermittency: The fraction of time that the river spends in a 
+      :param intermittency: The fraction of time that the river spends in a
           geomorphically effective flood of the given stage. This is needed
           only when a characteristic flood, rather than a full hydrograph,
           is given. [unitless: time per time]
@@ -394,7 +403,7 @@ class FlowDepthDoubleManning( object ):
     """
     def __init__(self):
         pass
-        
+
     def set_n(self, _var):
         self.n = _var
 
@@ -409,7 +418,7 @@ class FlowDepthDoubleManning( object ):
 
     def set_b(self, _var):
         self.b = _var
-        
+
     def set_S(self, _var):
         self.S = _var
 
@@ -428,7 +437,7 @@ class FlowDepthDoubleManning( object ):
             return 0
         else:
             return fsolve( self.flow_depth_from_Manning_discharge, 1. )[0]
-    
+
     def initialize(self, n, k, P, h_bank, b, S):
         self.set_n(n)
         self.set_k(k)
@@ -436,14 +445,14 @@ class FlowDepthDoubleManning( object ):
         self.set_h_bank(h_bank)
         self.set_b(b)
         self.set_S(S)
-        
+
     def update(self, Q=None):
         """
         Not exactly updating anything, but to follow standard CSDMS I(U)RF
         """
         self.h = self.compute_depth(Q)
         return self.h
-        
+
     def run(self, Q=None):
         """
         Not exactly running anything, but to follow standard CSDMS I(U)RF
@@ -453,4 +462,3 @@ class FlowDepthDoubleManning( object ):
 
     def finalize(self):
         pass
-
