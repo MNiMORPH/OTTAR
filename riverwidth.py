@@ -104,8 +104,10 @@ class WidthNoncohesiveBanks(object):
         tau_star_bank = self.get_bankShieldsStress()
         self.bi = self.b[-1]
         if tau_star_bank > self.tau_star_crit:
-            self.bi += ( tau_star_bank - self.tau_star_crit )**(3/2.) \
-                     * self.dt * self.intermittency / self.h_banks
+            self.db_widening = ( tau_star_bank - self.tau_star_crit )**(3/2.) \
+                                 * self.dt * self.intermittency / self.h_banks
+        else:
+            self.db_widening = 0.
     
     def narrow(self):
         """
@@ -120,7 +122,7 @@ class WidthNoncohesiveBanks(object):
         self.bi = self.b[-1]
         self.tau_bank = tau_star_bank * (self.SSG * self.g * self.D)
         self.u_star_bank = (self.tau_bank / self.rho)**.5
-        self.tau_bed = self.rho * self.g * self.h * self.S
+        self.tau_bed = self.rho * self.g * self.h_banks * self.S
         self.tau_star_bed = self.tau_bed / (self.SSG * self.g * self.D)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
         self.u_star_crit = ( self.tau_star_crit * 
@@ -133,18 +135,16 @@ class WidthNoncohesiveBanks(object):
             sed_conc_center_prop = (self.u_star_bed - self.u_star_crit)**3
         else:
             sed_conc_center_prop = 0.
-        if self.tau_star_bank > self.tau_star_crit:
+        if tau_star_bank > self.tau_star_crit:
             sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit)**3
         else:
-            sed_conc_center_prop = 0.
+            sed_conc_edge_prop = 0.
         
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
                                 / self.bi
                                 
-        self.qsy = k_n * sed_conc_grad_prop
-
-        self.narrowing = self.qsy * self.dt / ( self.porosity * self.h )
-      
+        self.qsy = self.k_n * sed_conc_grad_prop
+        self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
         
     def initialize(self, t, Q):
         self.t = list(t)
@@ -162,7 +162,9 @@ class WidthNoncohesiveBanks(object):
         #self.narrow()
         # Compute widening
         self.widen()
-        self.b.append(self.bi)
+        #self.b.append(self.bi + self.db_widening)
+        self.narrow()
+        self.b.append(self.bi + self.db_widening - self.db_narrowing)
 
     def run(self):
         # Start at 1: time 0 has the initial conditions
