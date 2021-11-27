@@ -112,8 +112,10 @@ class WidthNoncohesiveBanks(object):
         tau_star_bank = self.get_bankShieldsStress()
         self.bi = self.b[-1]
         if tau_star_bank > self.tau_star_crit:
+            # 2* because erosion & deposition are symmetrical across banks
             self.db_widening = ( tau_star_bank - self.tau_star_crit )**(3/2.) \
-                                 * self.dt * self.intermittency / self.h_banks
+                                 * self.dt * self.intermittency / self.h_banks \
+                                 * 2
         else:
             self.db_widening = 0.
 
@@ -154,7 +156,8 @@ class WidthNoncohesiveBanks(object):
                                 / self.bi
 
         self.qsy = self.k_n * sed_conc_grad_prop
-        self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
+        # 2* because erosion & deposition are symmetrical across banks
+        self.db_narrowing = 2*self.qsy*self.dt / ( self.porosity*self.h_banks )
 
     def initialize(self, t, Q):
         self.t = list(t)
@@ -251,6 +254,7 @@ class WidthCohesiveBanks(object):
         threshold) at the bank
         """
         if self.tau_bank > self.tau_crit:
+            # 2* because erosion & deposition are symmetrical across banks
             self.db_widening = 2*self.k_d/self.h_banks \
                                  * ( self.tau_bank - self.tau_crit ) \
                                  * self.dt * self.intermittency
@@ -280,7 +284,8 @@ class WidthCohesiveBanks(object):
                                 / self.bi
 
         self.qsy = self.k_n * sed_conc_grad_prop
-        self.db_narrowing = self.qsy*self.dt / ( self.porosity*self.h_banks )
+        # 2* because erosion & deposition are symmetrical across banks
+        self.db_narrowing = 2*self.qsy*self.dt / ( self.porosity*self.h_banks )
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         """
