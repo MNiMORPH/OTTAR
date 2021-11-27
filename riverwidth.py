@@ -155,8 +155,16 @@ class WidthNoncohesiveBanks(object):
         else:
             sed_conc_edge_prop = 0.
 
-        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
-                                / self.bi
+        # Had previously divided by "bi" to create the gradient, but this
+        # was forgetting my own work by hand! So much of the channel is
+        # unaffected by the walls (constant velocity and stress), such that
+        # the near-wall zone of substantital velocity and stress gradients
+        # has a separate and approximately constant width.
+        # Now, the only width feedback will be the related to the powers
+        # to which the stress gradient is raised.
+        # Realism & increased stability! (Though narrow channels still can have
+        # deeper flows & steeper gradients)
+        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
 
         self.qsy = self.k_n * sed_conc_grad_prop
         # 2* because erosion & deposition are symmetrical across banks
@@ -234,7 +242,7 @@ class WidthCohesiveBanks(object):
         self.g = 9.805
         self.rho = 1000.
         self.porosity = 0.35
-        
+
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
@@ -297,8 +305,16 @@ class WidthCohesiveBanks(object):
         sed_conc_center_prop = (self.u_star_bed)**3.5
         sed_conc_edge_prop = (self.u_star_bank)**3.5
 
-        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop) \
-                                / self.bi
+        # Had previously divided by "bi" to create the gradient, but this
+        # was forgetting my own work by hand! So much of the channel is
+        # unaffected by the walls (constant velocity and stress), such that
+        # the near-wall zone of substantital velocity and stress gradients
+        # has a separate and approximately constant width.
+        # Now, the only width feedback will be the related to the powers
+        # to which the stress gradient is raised.
+        # Realism & increased stability! (Though narrow channels still can have
+        # deeper flows & steeper gradients)
+        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
 
         self.qsy = self.k_n * sed_conc_grad_prop
         # 2* because erosion & deposition are symmetrical across banks
