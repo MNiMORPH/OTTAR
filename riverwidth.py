@@ -334,9 +334,6 @@ class WidthCohesiveBanks(object):
         self.narrow()
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
 
-
-
-
     def run(self):
         # Start at 1: time 0 has the initial conditions
         for i in range(1, len(self.t)):
@@ -354,15 +351,15 @@ class WidthCohesiveBanks(object):
         self.Q = np.array(self.Q)
 
     def plot(self):
-        b_eq = self.get_equilibriumWidth(self.Qi)
+        #b_eq = self.get_equilibriumWidth(self.Qi)
         plt.figure()
-        plt.hlines(b_eq, self.t[0], self.t[-1]/86400.,
-                   '.5', label='Equilibrium width', linewidth=2)
+        #plt.hlines(b_eq, self.t[0], self.t[-1]/86400.,
+        #           '.5', label='Equilibrium width', linewidth=2)
         plt.plot(self.t/86400., self.b, 'k-', label='Transient width',
                  linewidth=2)
         plt.xlabel('Time [days of flood]')
         plt.ylabel('Channel width [m]')
-        plt.legend(loc='lower right')
+        #plt.legend(loc='lower right')
         plt.tight_layout()
         plt.show()
 
