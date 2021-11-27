@@ -1,15 +1,16 @@
-import riverwidth as rw
+import riverwidth
 import importlib
-importlib.reload(rw)
+importlib.reload(riverwidth)
 
-dlw = rw.DetachmentLimitedWidth(h_banks=1., S=1E-4, tau_crit=2., k_d=4E-6,
-                                lambda_r=.1, b0=50.)
+rw = riverwidth.WidthCohesiveBanks(h_banks=1., S=1E-4, tau_crit=2., k_d=4E-6,
+                                     b0=50.)
 
 import numpy as np
 t = np.arange(0,24*60.*60.*900,24*60.*60.)
 Q = 200.*np.ones(len(t))
 
-dlw.initialize(t,Q)
-dlw.run()
-dlw.finalize()
-dlw.plot()
+#rw.initialize(t,Q)
+rw.initialize_timeseries(t,Q)
+rw.run()
+rw.finalize()
+#rw.plot()
