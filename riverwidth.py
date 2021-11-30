@@ -204,17 +204,31 @@ class WidthNoncohesiveBanks(object):
         self.b = np.array(self.b)
         self.Q = np.array(self.Q)
 
-    def plot(self):
-        plt.figure()
-        #plt.hlines(b_eq, t[0] / (24.*60.*60.), t[-1] / (24.*60.*60.),
-        #           '.5', label='Equilibrium width', linewidth=2)
-        plt.plot(self.t / (24.*60.*60.), b, 'k-', label='Transient width',
-                 linewidth=2)
-        plt.xlabel('Time [days]')
-        plt.ylabel('Channel width [m]')
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
+    def plot(self, include_hydrograph=False):
+        if include_hydrograph == False:
+            plt.figure()
+            #plt.hlines(b_eq, t[0] / (24.*60.*60.), t[-1] / (24.*60.*60.),
+            #           '.5', label='Equilibrium width', linewidth=2)
+            plt.plot(self.t / (24.*60.*60.), self.b, 'k-', label='Transient width',
+                     linewidth=2)
+            plt.xlabel('Time [days]')
+            plt.ylabel('Channel width [m]')
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+        else:
+            fig = plt.figure(figsize=(6,10))
+            ax1 = plt.subplot(2,1,1)
+            ax2 = plt.subplot(2,1,2)
+            ax1.plot(self.t / (24.*60.*60.), self.b, 'k-', label='Transient width',
+                     linewidth=2)
+            ax1.ylabel('Channel width [m]')
+            #plt.legend()
+            ax2.plot(self.t / (24.*60.*60.), self.Q, 'b-', label='Transient width',
+                     linewidth=2)
+            plt.xlabel('Time [days]')
+            plt.tight_layout()
+            plt.show()
 
 
 class WidthCohesiveBanks(object):
