@@ -6,8 +6,8 @@ Transient and steady-state river-channel width calculations for both cohesive an
 ## Purpose
 
 This model is designed to compute the rate of river-channel widening based on changing hydrological regimes. This works for either:
-* Detachment-limited banks: Our focus is cohesive muds, but this should, in principle, also work for rock or biological mats. Think rivers with muddy banks.
-* Transport-limited banks. In this case, there is minimal to no vegetation or mud holding the banks together, or they do not add any appreciable strength. In this case, the rate of channel widening is based purely on the rate at which material (gravel, sand) can be removed from the banks and transported away.
+* Cohesive banks: Our focus is cohesive muds, but this should, in principle, also work for rock or biological mats. Think rivers with muddy banks.
+* Noncohesive banks. In this case, there is minimal to no vegetation or mud holding the banks together, or they do not add any appreciable strength. In this case, the rate of channel widening is based purely on the rate at which material (gravel, sand) can be removed from the banks and transported away.
 
 ## Model inputs and outputs
 
