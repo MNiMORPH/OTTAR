@@ -431,6 +431,8 @@ class WidthCohesiveBanks(object):
         self.widen()
         #self.b.append(self.bi + self.db_widening)
         self.narrow()
+        self.h_series.append(h) # h is based on previous b but associated with
+                                # the discharge that created current b
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
         #print(self.hclass.compute_depth( 500. ))
 
