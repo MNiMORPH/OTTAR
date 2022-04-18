@@ -505,7 +505,7 @@ class WidthCohesiveBanks(object):
         """
         if filename[-4:] != '.csv':
             filename += '.csv'
-        df.to_csv(filename)
+        self.df.to_csv(filename)
 
 
 class RiverWidth(WidthNoncohesiveBanks, WidthCohesiveBanks):
