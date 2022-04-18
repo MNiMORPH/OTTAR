@@ -72,6 +72,9 @@ class WidthNoncohesiveBanks(object):
         self.bi = self.b[-1]
         self.Qi = self.Q0
 
+        # Initialize list for all calculated flow depths
+        self.h_series = [np.nan]
+
     def get_equilibriumWidth(self, Q_eq):
         """
         Steady-state width under erosion only as t-->infinity
@@ -257,6 +260,9 @@ class WidthCohesiveBanks(object):
         self.rho = 1000.
         self.porosity = 0.35
 
+        # Initialize list for all calculated flow depths
+        self.h_series = [np.nan]
+
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
@@ -273,6 +279,7 @@ class WidthCohesiveBanks(object):
         self.k_b__eq = ( self.rho * self.g /
                          ((1+self.Parker_epsilon) * self.tau_crit) )**(5/3.) \
                        * channel_n
+
 
     def initialize_timeseries(self, t, Q):
         self.t = list(t)
@@ -321,7 +328,7 @@ class WidthCohesiveBanks(object):
             self.db_narrowing = 0
             return # exit the function, returning None
         sed_conc_edge_prop = (self.u_star_bank)**3.5
-        
+
         # Had previously divided by "bi" to create the gradient, but this
         # was forgetting my own work by hand! So much of the channel is
         # unaffected by the walls (constant velocity and stress), such that
@@ -332,10 +339,10 @@ class WidthCohesiveBanks(object):
         # Realism & increased stability! (Though narrow channels still can have
         # deeper flows & steeper gradients)
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
-        
+
         # Concentration gradient calcualted over min(h, h_beta):
         # This sets distance from banks over which side-wall drag is important
-        
+
         # Avoid div/0 (& math if not needed b/c no gradient)
         if sed_conc_grad_prop > 0:
             sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
@@ -344,7 +351,7 @@ class WidthCohesiveBanks(object):
         # [amount of sediment moving laterally / time]
         # (will declare it to be volumetric and define k_n accordingly)
         self.qsy = self.k_n * self.h * sed_conc_grad_prop
-        
+
         # EVENTUALLY HOLD TWO OPTIONS HERE:
         # 1. Uniform narrowing across the full h_banks
         # 2. Narrowing up to the height of the water only (so happens faster),
@@ -363,7 +370,7 @@ class WidthCohesiveBanks(object):
                                 / ( (1-self.porosity) * self.h_banks )
         return # Unnecessary but to make sure that the fucntion always returns
                # None (same type and value)
-        
+
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         """
@@ -399,7 +406,9 @@ class WidthCohesiveBanks(object):
                 """
                 self.bi += dbdt * dt_outer
                 dt_remaining = 0 # Perhaps return inner loop later
-        self.b.append(self.bi)
+        self.h_series.append(h) # h is based on previous b but associated with
+                                # the discharge that created current b
+        self.b.append(self.bi) # add current b to list of b
 
     def update__simple_time_step(self, dt, Qi):
         """
@@ -437,9 +446,17 @@ class WidthCohesiveBanks(object):
             self.update__simple_time_step(dt, self.Q[i])
 
     def finalize(self):
+        """
+        Prepending NaN at the beginning of discharge, water_depth, and time
+        lists. This is because width list is initalized with b0. Water depth is
+        prepended at the beginning of the class.
+        """
+        self.t.insert(0,np.nan)
+        self.Q.insert(0,np.nan)
         self.t = np.array(self.t)
         self.b = np.array(self.b)
         self.Q = np.array(self.Q)
+        self.h_series = np.array(self.h_series)
 
     def plot(self):
         #b_eq = self.get_equilibriumWidth(self.Qi)
