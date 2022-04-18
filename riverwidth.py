@@ -329,10 +329,33 @@ class WidthCohesiveBanks(object):
         # Realism & increased stability! (Though narrow channels still can have
         # deeper flows & steeper gradients)
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
+        
+        # Concentration gradient calcualted over min(h, h_beta):
+        # This sets distance from banks over which side-wall drag is important
+        sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
 
-        self.qsy = self.k_n * sed_conc_grad_prop
+        # Lateral sediment discharge per unit channel length and width
+        # [amount of sediment moving laterally / time]
+        # (will declare it to be volumetric and define k_n accordingly)
+        self.qsy = self.k_n * self.h * sed_conc_grad_prop
+        
+        # EVENTUALLY HOLD TWO OPTIONS HERE:
+        # 1. Uniform narrowing across the full h_banks
+        # 2. Narrowing up to the height of the water only (so happens faster),
+        #    and tracking the width of a virtual inset channel until the next
+        #    highest flow moves the sediment farther up.
+        #    even allowing the sediment to move up instantaneously will require
+        #    some amount of tracking an arbitrary number of inset rectangles
+        #    and therefore some extra coding and bookkeeping
+        #    so let's include this, but not just yet.
+
+        # SIMPLE NARROWING (OVER FULL CHANNEL WALL HEIGHT)
         # 2* because erosion & deposition are symmetrical across banks
-        self.db_narrowing = 2*self.qsy*self.dt / ( self.porosity*self.h_banks )
+        # Divided by amount of lateral sediment motion needed to create a unit
+        # of narrowing across the full h_banks
+        self.db_narrowing = 2*self.qsy*self.dt \
+                                / ( (1-self.porosity) * self.h_banks )
+        
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         """
@@ -391,6 +414,7 @@ class WidthCohesiveBanks(object):
         #self.b.append(self.bi + self.db_widening)
         self.narrow()
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
+        #print(self.hclass.compute_depth( 500. ))
 
     def run(self):
         # Start at 1: time 0 has the initial conditions
