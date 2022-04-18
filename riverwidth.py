@@ -315,10 +315,13 @@ class WidthCohesiveBanks(object):
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
 
-        # Sediment concentrations
+        # Sediment concentrations / exit early if no change needed
         sed_conc_center_prop = (self.u_star_bed)**3.5
+        if sed_conc_center_prop == 0:
+            self.db_narrowing = 0
+            return # exit the function, returning None
         sed_conc_edge_prop = (self.u_star_bank)**3.5
-
+        
         # Had previously divided by "bi" to create the gradient, but this
         # was forgetting my own work by hand! So much of the channel is
         # unaffected by the walls (constant velocity and stress), such that
@@ -332,7 +335,10 @@ class WidthCohesiveBanks(object):
         
         # Concentration gradient calcualted over min(h, h_beta):
         # This sets distance from banks over which side-wall drag is important
-        sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
+        
+        # Avoid div/0 (& math if not needed b/c no gradient)
+        if sed_conc_grad_prop > 0:
+            sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
 
         # Lateral sediment discharge per unit channel length and width
         # [amount of sediment moving laterally / time]
@@ -355,6 +361,8 @@ class WidthCohesiveBanks(object):
         # of narrowing across the full h_banks
         self.db_narrowing = 2*self.qsy*self.dt \
                                 / ( (1-self.porosity) * self.h_banks )
+        return # Unnecessary but to make sure that the fucntion always returns
+               # None (same type and value)
         
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
