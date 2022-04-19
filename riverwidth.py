@@ -302,9 +302,14 @@ class WidthCohesiveBanks(object):
         """
         if self.tau_bank > self.tau_crit:
             # 2* because erosion & deposition are symmetrical across banks
-            self.db_widening = 2*self.k_d*self.h/self.h_banks \
-                                 * ( self.tau_bank - self.tau_crit ) \
-                                 * self.dt * self.intermittency
+            if self.h < self.h_banks:
+                self.db_widening = 2*self.k_d*self.h/self.h_banks \
+                                     * ( self.tau_bank - self.tau_crit ) \
+                                     * self.dt * self.intermittency
+            else:
+                self.db_widening = 2*self.k_d \
+                                     * ( self.tau_bank - self.tau_crit ) \
+                                     * self.dt * self.intermittency
         else:
             self.db_widening = 0.
 
