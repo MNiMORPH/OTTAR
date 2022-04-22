@@ -94,7 +94,7 @@ class WidthNoncohesiveBanks(object):
         channel (ONLY!)
         """
         kh = D**.1 / (2.9 * g**.3 * S**.3)
-        h = kh * (self.Qi / self.bi[-1])**0.6
+        h = kh * (self.Qi / self.b[-1])**0.6
         return h
 
     def get_bedShieldsStress(self):
@@ -552,6 +552,10 @@ class RiverWidth(WidthNoncohesiveBanks, WidthCohesiveBanks):
       if b0 is not None and Q0 is not None:
           raise TypeError('You must specify exactly one of {b0, Q0}.')
           self.b = [b0]
+      elif b0 is not None:
+          self.b = [b0]
+      elif Q0 is not None:
+          raise RuntimeError('Q0 to b conversion net yet implemented')
       else:
           pass
 
