@@ -469,13 +469,13 @@ class WidthCohesiveBanks(object):
         prepended at the beginning of the class.
         
         The output DataFrame will contain:
-        * Date [datetime]
+        * Timestamp [datetime]
         * Discharge [m^3/s]
         * Channel width [m]
         * Water depth [m]
         
         This is (consider updating to make width, depth consistent):
-        Date[now]
+        Timestamp[now]
         Discharge[now]
         Depth[from discharge[now] and width[before]]
         Width[[new]]
@@ -490,7 +490,7 @@ class WidthCohesiveBanks(object):
         
         # Create Pandas dataframe
         self.df = pd.DataFrame()
-        self.df['Date'] = self.t
+        self.df['Timestamp'] = self.t
         self.df['Discharge [m^3/s]'] = self.Q
         self.df['Channel width [m]'] = self.b
         self.df['Water depth [m]'] = self.h_series
