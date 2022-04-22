@@ -452,7 +452,7 @@ class WidthCohesiveBanks(object):
         #print(self.hclass.compute_depth( 500. ))
 
     def run(self):
-        for i in range(len(self.t)):
+        for i in range(1, len(self.t)):
             # Not sure how inefficient this repeat check will be
             # Will find a better way in the future
             try:
@@ -483,8 +483,6 @@ class WidthCohesiveBanks(object):
         """
         
         # Generate numpy arrays of equal length
-        self.t.insert(0,np.nan)
-        self.Q.insert(0,np.nan)
         self.t = np.array(self.t)
         self.b = np.array(self.b)
         self.Q = np.array(self.Q)
