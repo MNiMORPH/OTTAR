@@ -26,5 +26,5 @@ rw.initialize_flow_calculations(0.03, 100, 1.5)
 rw.initialize_timeseries(t,Q)
 rw.run()
 rw.finalize()
-rw.plot()
+rw.plotQb()
 
