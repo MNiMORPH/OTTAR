@@ -14,7 +14,7 @@ streamflowData = pd.read_csv('MN_Jordan_daily.csv')
 streamflowData['Timestamp'] = streamflowData['Timestamp'].astype('datetime64[ns]')
 streamflowData = streamflowData.sort_values('Timestamp')
 
-dlw = rw.WidthCohesiveBanks(h_banks=6., S=1E-4, tau_crit=5, k_d=3E-8,
+dlw = rw.RiverWidth(h_banks=6., S=1E-4, tau_crit=5, k_d=3E-8,
                                 b0=65.)
 
 t = streamflowData['Timestamp']
