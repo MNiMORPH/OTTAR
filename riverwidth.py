@@ -6,7 +6,13 @@ import pandas as pd
 
 class WidthNoncohesiveBanks(object):
     """
-    The classic case for the gravel-bed river.
+    Gravel-bed rivers without any cohesion holding the banks together
+    Appropriate for braided streams
+    
+    Should probably be able to combine this with the cohesive banks
+    class and use the values passed (re: cohesive erosion parameters,
+    grain size, ...) to automatically find what is holding the channel
+    together. But this might come later.
     """
 
     def __init__(self, h_banks, S, D, k_n=0., b0=None, Q0=None,
@@ -78,7 +84,9 @@ class WidthNoncohesiveBanks(object):
 
     def get_equilibriumWidth(self, Q_eq):
         """
-        Steady-state width under erosion only as t-->infinity
+        Steady-state width (as t-->infinity) for noncoehsive banks
+        (or likely, cohesive banks too, so long as the ultimate shape
+        of the channel is set by the weight of the grains)
         """
         b_eq = self.k_b__eq * Q_eq * self.S**(7/6.) / self.D**1.5
         return b_eq
@@ -169,6 +177,49 @@ class WidthNoncohesiveBanks(object):
         # Realism & increased stability! (Though narrow channels still can have
         # deeper flows & steeper gradients)
         sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
+
+        # Avoid div/0 (& math if not needed b/c no gradient)
+        if sed_conc_grad_prop > 0:
+            sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
+
+        # K_Ey is the lateral eddy diffusivity.
+        # Constant 0.13 is from Parker (1978, sand-bed)
+        # Constant 0.16 (not used) was found in the work of Deng et al. (2003)
+        # "Predicting Transverse Turbulent Diffusivity in Straight Alluvial
+        # Rivers"
+        # This is probably assuming that h < (b/2) or something
+        K_Ey = 0.13 * self.h * self.u_star_bed
+        
+        # k_n is an efficiency scaling term for lateral sediment transport
+
+        # Lateral sediment discharge per unit channel length and width
+        # [amount of sediment moving laterally / time]
+        # (will declare it to be volumetric and define k_n accordingly)
+        # In the case of bed-load transport, I approximate an active layer
+        # whose thickness scales with grain diameter (D) -- this differs
+        # from the suspended-load case
+        # It seems that perhaps bed load vs. suspended load should be split
+        # out separately from cohesive or noncohesive banks
+        self.qsy = self.k_n * K_Ey * self.D * sed_conc_grad_prop
+
+        # EVENTUALLY HOLD TWO OPTIONS HERE:
+        # 1. Uniform narrowing across the full h_banks
+        # 2. Narrowing up to the height of the water only (so happens faster),
+        #    and tracking the width of a virtual inset channel until the next
+        #    highest flow moves the sediment farther up.
+        #    even allowing the sediment to move up instantaneously will require
+        #    some amount of tracking an arbitrary number of inset rectangles
+        #    and therefore some extra coding and bookkeeping
+        #    so let's include this, but not just yet.
+
+        # SIMPLE NARROWING (OVER FULL CHANNEL WALL HEIGHT)
+        # 2* because erosion & deposition are symmetrical across banks
+        # Divided by amount of lateral sediment motion needed to create a unit
+        # of narrowing across the full h_banks
+        self.db_narrowing = 2*self.qsy*self.dt \
+                                / ( (1-self.porosity) * self.h_banks )
+        return # Unnecessary but to make sure that the fucntion always returns
+               # None (same type and value)
 
         self.qsy = self.k_n * sed_conc_grad_prop
         # 2* because erosion & deposition are symmetrical across banks
@@ -496,6 +547,9 @@ class WidthCohesiveBanks(object):
         self.df['Water depth [m]'] = self.h_series
 
     def plotb(self):
+        """
+        Plot channel width over time
+        """
         #b_eq = self.get_equilibriumWidth(self.Qi)
         plt.figure()
         #plt.hlines(b_eq, self.t[0], self.t[-1]/86400.,
@@ -509,6 +563,9 @@ class WidthCohesiveBanks(object):
         plt.show()
         
     def plotQb(self):
+        """
+        Plot channel width and river discharge over time
+        """
         if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
             _t = self.t
         else:
