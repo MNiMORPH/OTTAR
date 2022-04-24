@@ -495,7 +495,7 @@ class WidthCohesiveBanks(object):
         self.df['Channel width [m]'] = self.b
         self.df['Water depth [m]'] = self.h_series
 
-    def plot(self):
+    def plotb(self):
         #b_eq = self.get_equilibriumWidth(self.Qi)
         plt.figure()
         #plt.hlines(b_eq, self.t[0], self.t[-1]/86400.,
@@ -505,6 +505,25 @@ class WidthCohesiveBanks(object):
         plt.xlabel('Time [days of flood]')
         plt.ylabel('Channel width [m]')
         #plt.legend(loc='lower right')
+        plt.tight_layout()
+        plt.show()
+        
+    def plotQb(self):
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
+        plt.figure(figsize=(12,8))
+        ax1 = plt.subplot(2,1,1)
+        ax2 = plt.subplot(2,1,2)
+        ax1.plot(_t, self.b, 'k-', linewidth=2)
+        ax1.set_ylabel('Channel width [m]', fontsize=16)
+        ax2.plot(_t, self.Q)
+        ax2.set_ylabel('Discharge [m$^3$ s$^{-1}$]', fontsize=16)
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            ax2.set_xlabel('Date', fontsize=16)
+        else:
+            ax2.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
         plt.show()
         
