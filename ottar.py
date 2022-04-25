@@ -6,7 +6,7 @@ import pandas as pd
 
 class RiverWidth(object):
     """
-    The classic case for the sand- and/or silt-bed river
+    Transient adjustments to river-channel width
     """
 
     def __init__(self, h_banks, S, tau_crit, k_d, b0, k_n=0.,

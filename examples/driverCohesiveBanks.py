@@ -2,13 +2,13 @@
 
 # Evolution of a river with cohesive banks
 
-import riverwidth
+import ottar
 from matplotlib import pyplot as plt
 
 # For the sake of modifying the library: can reload and re-run
 # Not necessary as part of an example
 import importlib
-importlib.reload(riverwidth)
+importlib.reload(ottar)
 
 # Create discharge time series
 # In this case, a series of days that all have 200 m^3/s
@@ -17,7 +17,7 @@ t = np.arange(0,24*60.*60.*1500,24*60.*60.)
 Q = 200.*np.ones(len(t))
 
 # Instantiate river-width class
-rw = riverwidth.RiverWidth(h_banks=2., S=1E-4, tau_crit=2., k_d=4E-6,
+rw = ottar.RiverWidth(h_banks=2., S=1E-4, tau_crit=2., k_d=4E-6,
                                      b0=50., k_n=0)
 
 # Run full code: flow, widening, and plotting at the end

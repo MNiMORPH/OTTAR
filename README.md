@@ -1,7 +1,10 @@
 [![DOI](https://zenodo.org/badge/261265317.svg)](https://zenodo.org/badge/latestdoi/261265317)
 
-# river-channel-width
-Transient and steady-state river-channel width calculations for both cohesive and noncohesive banks.
+# OTTAR
+
+Ode To Transient Rivers (Ancho!)
+
+Transiently evolving river-channel width as a function of streambank properties, sediment in transport, and the hydrograph.
 
 ## Purpose
 
