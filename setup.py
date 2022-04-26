@@ -28,6 +28,9 @@ setuptools.setup(
     ],
     keywords='fluvial geomorphology sediment transport landscape evolution',
     project_urls={
-        'Model page': 'https://csdms.colorado.edu/wiki/Model:OTTAR',
+        'Source and README': 'https://github.com/MNiMORPH/OTTAR',
+        'CSDMS repository': 'https://csdms.colorado.edu/wiki/Model:OTTAR',
+        'Zenodo': 'https://zenodo.org/record/5781792/export/dcat#.Yme_nIyxXCK',
+        'DOI': 'https://dx.doi.org/10.5281/zenodo.5124965',
     },
 )
