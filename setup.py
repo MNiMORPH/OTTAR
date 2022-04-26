@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="OTTAR",
-    version="1.0.0",
+    version="0.2.0",
     author="Andrew D. Wickert",
     author_email="awickert@umn.edu",
     description="Ode To Transient (Ancho de los) Rivers: Transient evolution of river-channel width",
