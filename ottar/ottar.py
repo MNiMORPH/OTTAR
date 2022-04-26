@@ -122,7 +122,7 @@ class RiverWidth(object):
         if sed_conc_grad_prop > 0:
             sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
 
-        # K_Ey is the lateral eddy diffusivity.
+        # K_Ey is the lateral eddy diffusivity [m^2/s].
         # Constant 0.13 is from Parker (1978, sand-bed)
         # Constant 0.16 (not used) was found in the work of Deng et al. (2003)
         # "Predicting Transverse Turbulent Diffusivity in Straight Alluvial
@@ -130,12 +130,13 @@ class RiverWidth(object):
         # This is probably assuming that h < (b/2) or something
         K_Ey = 0.13 * self.h * self.u_star_bed
         
-        # k_n is an efficiency scaling term for lateral sediment transport
+        # k_n [unitless]: efficiency scaling term for lateral sediment
+        #                 transport, trapping, and deposition
 
         # Lateral sediment discharge per unit channel length and width
         # [amount of sediment moving laterally / time]
         # (will declare it to be volumetric and define k_n accordingly)
-        self.qsy = self.k_n * K_Ey * self.h * sed_conc_grad_prop
+        self.qsy = self.k_n * K_Ey * self.h * sed_conc_grad
 
         # EVENTUALLY HOLD TWO OPTIONS HERE:
         # 1. Uniform narrowing across the full h_banks
