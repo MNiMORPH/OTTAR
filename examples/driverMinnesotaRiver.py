@@ -1,5 +1,11 @@
 #! /usr/bin/python3
 
+"""
+This is meant as a schematic example, using data from the Minnesota River at
+Jordan (MN) stream gauge. Parameters are not calibrated to data, and are not
+intended to fit real river-width measurements.
+"""
+
 import ottar
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -14,7 +20,7 @@ streamflowData = pd.read_csv('MN_Jordan_daily.csv')
 streamflowData['Timestamp'] = streamflowData['Timestamp'].astype('datetime64[ns]')
 streamflowData = streamflowData.sort_values('Timestamp')
 
-rw = ottar.RiverWidth(h_banks=6., S=1E-4, tau_crit=5, k_d=3E-8,
+rw = ottar.RiverWidth(h_banks=6., S=1E-4, tau_crit=5, k_d=2E-7, k_n=5E-2,
                                 b0=65.)
 
 t = streamflowData['Timestamp']
