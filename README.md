@@ -8,38 +8,41 @@ Transiently evolving river-channel width as a function of streambank properties,
 
 ## Purpose
 
-This model is designed to compute the rate of river-channel widening based on changing hydrological regimes. This works for either:
-* Cohesive banks: Our focus is cohesive muds, but this should, in principle, also work for rock or biological mats. Think rivers with muddy banks.
-* Noncohesive banks. In this case, there is minimal to no vegetation or mud holding the banks together, or they do not add any appreciable strength. In this case, the rate of channel widening is based purely on the rate at which material (gravel, sand) can be removed from the banks and transported away.
+This model is designed to compute the rate of river-channel widening based on changing hydrological regimes. It is currently designed for rivers with cohesive banks, with a critical shear stress for particle detachment and an erosion-rate coefficient.
+
+## Structure
+
+OTTAR contains:
+
+* The `RiverWidth` class, which contains methods to evolve the width of an alluvial river.
+* The `FlowDepthDoubleManning` class, which is used to estimate flow depth from discharge, even with an evolving river-channel geometry.
 
 ## Model inputs and outputs
 
 ### Inputs
 
-Required inputs from field data:
-* River bank height, measured from the channel bed to the top of the banks
-* Time-series of **flow depth** or a way to calculate this internally
-
-Inputs, either from field data or to be calibrated in an inversion scheme (see descriptions on table below):
-* Detachment-limited case
-  * `tau_crit`
-  * `k_d`
-* Transport-limited case
-  * `D`
-
-#### Key input parameters
+#### Key input parameters (RiverWidth)
 
 | **Variable** 	| **Description**                                                                                                                                                                                                                                                                                                   	| **Typical value(s)**        	|
 |--------------	|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|-----------------------------	|
 | `h_banks`    	| **Stream-bank height**. This is the thickness of material that must be removed for the river to widen by one unit lateral distance.                                                                                                                                                                               	| 1-5 m                       	|
-| `S`          	| **Channel downstream-directed slope**. This is used to compute shear stresses and (if necessary) flow depth from water discharge.                                                                                                                                                                                 	| 10<sup>-3<\sup>             	|
-| `tau_crit`   	| **Critical shear stress required to start eroding muddy banks**. At this stress, the flow begins to be able to detach particles. When set up to perform an **inversion** using data on river widening and past flows, this is one of two key parameters to be estimated for rivers with detachment-limited banks. 	| 1--2 Pa                     	|
-| `k_d`        	| **Erosion-rate coefficient**. This determines the rate of erosion as a function of shear stress above critical. When set up to perform an **inversion** using data on river widening and past flows, this is the other of two key parameters to be estimated for rivers with detachment-limited banks.            	| 10<sup>--6<\sup> m / (Pa s) 	|
-| `lambda_r`   	| **Nikuradse roughness coefficient** ($$k_s$$). This is used if required to create a stage--discharge relationship.                                                                                                                                                                                                	| 0.05                        	|
-| `D`          	| **Bed-material median grain size**. This is required for rivers with transport-limited banks. When set up to perform an **inversion** using data on river widening and past flows, this is (if unknown) the parameters to be estimated for rivers with transport-limited banks.                                   	| 0.002--0.2 m                	|
-| `Q0`         	| **Initial discharge**. Initial discharge to which a channel's width is adjusted                                                                                                                                                                                                                                   	| 1--1000 m<sup>3<\sup>/s     	|
-| `b0`         	| **Initial width**. Starting width of a channel                                                                                                                                                                                                                                                                    	| 1--1000 m                   	|
+| `S`          	| **Channel downstream-directed slope**. This is used to compute shear stresses and (if necessary) flow depth from water discharge.                                                                                                                                                                                 	| 10<sup>-3</sup>             	|
+| `tau_crit`   	| **Critical shear stress required to start eroding muddy banks**. At this stress, the flow begins to be able to detach particles. When set up to perform an **inversion** using data on river widening and past flows, this is one of two key parameters to be estimated for rivers with detachment-limited banks. 	| 1&ndash;10 Pa                     	|
+| `k_d`        	| **Erosion-rate coefficient**. This determines the rate of erosion as a function of shear stress above critical. When set up to perform an **inversion** using data on river widening and past flows, this is the other of two key parameters to be estimated.            	| ~10<sup>-7</sup> m / (Pa s) 	|
+| `k_n`         	| **Narrowing coefficient**. This modulates the efficiency of channel narrowing via lateral sediment transport and deposition. It may relate to bar/bank structure and/or to vegetation growth and its ability to trap and stabilize sediment.                                                                                                                                                                                                                                    	| ~10<sup>-2</sup>     	|
+| `b0`         	| **Initial width**. Starting width of a channel                                                                                                                                                                                                                                                                    	| 1&ndash;1000 m                   	|
+
+#### Key input data sets and parameters (FlowDepthDoubleManning)
+
+*This step is used to compute flow depths from a discharge time series, and may be skipped if you already posess a time series of flow depth*
+
+* Discharge time series
+* Manning's n (channel)
+* Roughness / topogrpahy coefficient (floodplains)
+* Depth / topography exponent (floodplains)
 
 ### Outputs
 
-This program outputs a time series of channel width, `b(t)`.
+This program outputs a time series of channel width, `b(t)`. It organizes this within a Pandas DataFrame that can also be exported using the `write_csv()` function within the `RiverWidth` class.
+ 
+Plots can also be made of just river width (`plotb()`) or of discharge and river width (`plotQb`).
