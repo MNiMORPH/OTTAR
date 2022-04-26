@@ -4,8 +4,8 @@ authors:
 - family-names: "Wickert"
   given-names: "Andrew D."
   orcid: "https://orcid.org/0000-0002-9545-3365"
-title: "ottar"
-version: 0.1.0
+title: "OTTAR"
+version: 0.2.0
 doi: 10.5281/zenodo.5124965
-date-released: 2021-12-14
-url: "https://github.com/umn-earth-surface/river-channel-width"
+date-released: 2022-04-26
+url: "https://github.com/MNiMORPH/OTTAR"
