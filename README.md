@@ -8,7 +8,7 @@ Transiently evolving river-channel width as a function of streambank properties,
 
 ## Purpose
 
-This model is designed to compute the rate of river-channel widening based on changing hydrological regimes. It is currently designed for rivers with cohesive banks, with a critical shear stress for particle detachment and an erosion-rate coefficient.
+This model is designed to compute the rates of river-channel widening and narrowing based on changing hydrological regimes. It is currently designed for rivers with cohesive banks, with a critical shear stress for particle detachment and an erosion-rate coefficient.
 
 ## Structure
 
