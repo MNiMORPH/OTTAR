@@ -10,12 +10,28 @@ Transiently evolving river-channel width as a function of streambank properties,
 
 This model is designed to compute the rates of river-channel widening and narrowing based on changing hydrological regimes. It is currently designed for rivers with cohesive banks, with a critical shear stress for particle detachment and an erosion-rate coefficient.
 
+## Installation
+
+From PyPI:
+```sh
+pip install ottar
+```
+
+Locally, inside a clone of this git repository (the `-e` permits you to make local updates to the code and have them incorporated into the way that OTTAR runs):
+```sh
+pip install -e .
+```
+
 ## Structure
 
 OTTAR contains:
 
 * The `RiverWidth` class, which contains methods to evolve the width of an alluvial river.
 * The `FlowDepthDoubleManning` class, which is used to estimate flow depth from discharge, even with an evolving river-channel geometry.
+
+## Examples
+
+There's a [folder for these](https://github.com/MNiMORPH/OTTAR/tree/master/examples)!
 
 ## Model inputs and outputs
 
