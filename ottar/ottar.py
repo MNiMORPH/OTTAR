@@ -26,8 +26,11 @@ class RiverWidth(object):
         self.bi = self.b[-1]
 
         # Constants
+        # Could see reasons for a user to change these, but not enough
+        # to prioritize opening access
         self.g = 9.805
         self.rho = 1000.
+        self.rho_s = 2650.
         self.porosity = 0.35
 
         # Initialize list for all calculated flow depths
@@ -96,6 +99,16 @@ class RiverWidth(object):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
+        
+        """
+        # Sloppy test: Bed and bank stresses will begin to approach one another
+        # as flood h becomes >> h_banks. So:
+        if self.h > self.h_banks:
+            tau_bank = self.rho * self.g * self.h_banks * self.S / (1 + self.Parker_epsilon)
+            self.u_star_bank = (tau_bank / self.rho)**.5
+            tau_bed = tau_bank * (1 + self.Parker_epsilon)
+            self.u_star_bed = (tau_bed / self.rho)**.5
+        """
 
         # Sediment concentrations / exit early if no change needed
         sed_conc_center_prop = (self.u_star_bed)**3.5
@@ -120,7 +133,12 @@ class RiverWidth(object):
 
         # Avoid div/0 (& math if not needed b/c no gradient)
         if sed_conc_grad_prop > 0:
+            ### TEST !!!!!!!!!!!!!!
+            # CURRENT USE
             sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
+            # NOT PURELY RECTANGULAR ASSUMPTION: h_banks scales with size
+            # of gradient along margin
+            # sed_conc_grad = sed_conc_grad_prop / self.h_banks
 
         # K_Ey is the lateral eddy diffusivity [m^2/s].
         # Constant 0.13 is from Parker (1978, sand-bed)
@@ -129,6 +147,12 @@ class RiverWidth(object):
         # Rivers"
         # This is probably assuming that h < (b/2) or something
         K_Ey = 0.13 * self.h * self.u_star_bed
+        ## TEST !!!!!!!!!!!!!
+        # To bring sediment to banks, maybe overbank flows don't help
+        # Just bring sediments past the banks!
+        # THIS SEEMS CRITICAL TO MAINTAINING CHANNEL WIDTH
+        ## K_Ey = 0.13 * np.min((self.h, self.h_banks)) * self.u_star_bed
+        # STILL DOESN'T FIX THE POSITIVE FEEDBACK -- HM.
         
         # k_n [unitless]: efficiency scaling term for lateral sediment
         #                 transport, trapping, and deposition
@@ -157,6 +181,38 @@ class RiverWidth(object):
         return # Unnecessary but to make sure that the fucntion always returns
                # None (same type and value)
 
+
+    def stress_partitioning(self):
+        """
+        Placeholder to return the skin-friciton component of
+        total bed shear stress
+        """
+        pass
+
+    def compute_q_bedload(self):
+        """
+        Meyer-Peter & Muller
+        Use stress_partitioning in future
+        Currently pretending that grains are 0.5 mm
+        """
+        R  = (self.rho_s - self.rho) / self.rho
+        tau_star = self.h * self.S / (R * 5E-4)
+        tau_star_crit = 0.0495
+        if tau_star > tau_star_crit:
+            self.q_b = 3.97 * (tau_star - tau_star_crit)**1.5 * (R*self.g*5E-4)**.5 * 5E-4
+
+    def widen_noncohesive(self):
+        """
+        Widening due to lateral slope failures, per Parker (1978, sand-bed)
+        prescribing 5% lateral slope on bar
+        """
+        Sy = 5E-2
+        mu_dynamic = 0.577 # Dynamic Coulomb friction coefficient
+        self.compute_q_bedload()
+        # Inwardly directed q_b_y
+        q_b_y = (self.q_b / (1 + self.Parker_epsilon)) * Sy / mu_dynamic
+        self.db_widening_noncohesive = q_b_y / ( (1 - self.porosity) * self.h_banks ) * self.dt
+        
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         """
@@ -214,11 +270,13 @@ class RiverWidth(object):
         self.h = h # For the widening, at least for now
         # Compute widening
         self.widen()
+        #self.widen_noncohesive()
+        self.db_widening_noncohesive = 0 # TEST
         #self.b.append(self.bi + self.db_widening)
         self.narrow()
         self.h_series.append(h) # h is based on previous b but associated with
                                 # the discharge that created current b
-        self.b.append(self.bi + self.db_widening - self.db_narrowing)
+        self.b.append(self.bi + self.db_widening  + self.db_widening_noncohesive - self.db_narrowing)
         #print(self.hclass.compute_depth( 500. ))
 
     def run(self):
