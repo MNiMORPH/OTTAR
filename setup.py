@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.2.0",
     author="Andrew D. Wickert",
     author_email="awickert@umn.edu",
-    description="Ode To Transient (Ancho de los) Rivers: Transient evolution of river-channel width",
+    description="Ode To Transient Ancho de los Rivers: Transient evolution of river-channel width",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MNiMORPH/ottar",
