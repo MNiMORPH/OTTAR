@@ -2,7 +2,7 @@
 
 # OTTAR
 
-Ode To Transient (Ancho de los) Rivers
+Ode To Transient Ancho de los Rivers
 
 Transiently evolving river-channel width as a function of streambank properties, sediment in transport, and the hydrograph.
 
