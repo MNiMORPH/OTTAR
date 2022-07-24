@@ -159,7 +159,7 @@ class RiverWidth(object):
                 self.db_widening = db_cohesive
             else:
                 self.db_widening_cohesive_control.append( False )
-                self.db_widening = db_cohesive
+                self.db_widening = db_noncohesive
 
         # Record this into the list
         self.db_widening_series.append( self.db_widening )
