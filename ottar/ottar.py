@@ -23,6 +23,7 @@ class RiverWidth(object):
         self.h_banks = h_banks
         self.S = S
         self.tau_crit = tau_crit # Critical stress to detach particles from bank
+        self.tau_crit_equilibrium = self.tau_crit # sets ultimate channel width
         self.k_d = k_d # Bank rate constant
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
@@ -59,6 +60,7 @@ class RiverWidth(object):
         self.h_series = [np.nan]
         
         # Initialize lists for the rates of widening and narrowing
+        self.db_widening_cohesive_control = [np.nan] # F if D, T if cohesion
         self.db_widening_series = [np.nan]
         self.db_narrowing_series = [np.nan]
         
@@ -119,28 +121,122 @@ class RiverWidth(object):
 
     def widen(self):
         """
-        Widen a river channel based on the shear stress (compared to a
-        threshold) at the bank
+        Compute river widening and append this to the list of river-widening
+        rates.
+        
+        Use the slower of the two between cohesive and noncohesive as a
+        rate-limiting step. It will be up to the user to input, for example,
+        a very low cohesion (or 0) for something like a braided river with
+        minimal organic/cohesive matter.
+        """
+
+        # Inefficient but complete: compute both and compare.
+        # That is, unless D is not set, in which case, a fully cohesive system
+        # is assumed
+        
+        if self.D is None:
+            self.db_widening = self.widen_cohesive()
+            self.db_widening_cohesive_control.append( True )
+        else:
+            db_noncohesive = self.widen_noncohesive()
+            db_cohesive = self.widen_cohesive()
+            # Allow natural and smooth transition between which factor among
+            # these controls the widening rate.
+            # With a gravel-bed channel with gravel banks packed with mud
+            # in between with a decent amount of cohesion, this should result
+            # in the mud dominating the widening rate up until the very end,
+            # when this is taken over by the difficulty of moving the clasts.
+            # Record which one won in the list
+            if db_noncohesive > db_cohesive:
+                self.db_widening_cohesive_control.append( True )
+                self.db_widening = db_cohesive
+            else:
+                self.db_widening_cohesive_control.append( False )
+                self.db_widening = db_cohesive
+
+        # Record this into the list
+        self.db_widening_series.append( self.db_widening )
+        
+        
+
+    def widen_cohesive(self):
+        """
+        Widening set by shear stress on the banks and a linear (in stress) rate
+        of particle detachment
         """
         if self.tau_bank > self.tau_crit:
             # 2* because erosion & deposition are symmetrical across banks
             if self.h < self.h_banks:
-                self.db_widening = 2*self.k_d*self.h/self.h_banks \
-                                     * ( self.tau_bank - self.tau_crit ) \
-                                     * self.dt * self.intermittency
+                db_widening = 2*self.k_d*self.h/self.h_banks \
+                               * ( self.tau_bank - self.tau_crit ) \
+                               * self.dt * self.intermittency
             else:
-                self.db_widening = 2*self.k_d \
-                                     * ( self.tau_bank - self.tau_crit ) \
-                                     * self.dt * self.intermittency
+                db_widening = 2*self.k_d \
+                               * ( self.tau_bank - self.tau_crit ) \
+                               * self.dt * self.intermittency
         else:
-            self.db_widening = 0.
-        # Record this into the list
-        self.db_widening_series.append( self.db_widening )
+            db_widening = 0.
+        return db_widening
 
+    def widen_noncohesive(self):
+        """
+        Widening set by shear stress on bank and the Wong & Paker (2006) MPM
+        formula
+        """
+        print("Noncohesive_control")
+        # Tau*
+        self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
+                                                self.g * self.D )
+
+        if self.tau_star_bank > self.tau_star_crit_sed:
+  
+            # This will just be in one place along the bank
+            # And therefore needs to be integrated vertically
+            # We assume the bank shape of Parker (1978), which is plausible
+            # and allows the entire bank region to experience
+            # the exact same shear stress regardless of flow depth.
+            # We unexactly but not so unrealistically assume that this
+            # shape is similar regardless of the flow depth.
+            
+            # [m^2/s] -- integrated over depth
+            qs_bank_perpendicular = 3.97 * ( self.tau_star_bank - 
+                                      self.tau_star_crit_sed )**(3/2.)
+
+            # [m^3/s] -- integrate along length of bank
+            # (trivial integral because constant stress: multiply)
+            # Assume that the curved distance along the bank is approximately
+            # the same as the bank height of flow depth (whichever is less: 
+            # rectangular assumption: this will be less than the real length,
+            # but likely not more than a factor of 2 shorter
+            Qs_bank = qs_bank_perpendicular * np.min(self.h, self.h_banks)
+            
+            # Remove 1 dimension because we are considering a unit distance
+            # for the divergence, and that all sediment produced in the
+            # near-bank zone then tumbles into the deeper parts of the channel
+            # rather than redepositing on the bank.
+            
+            # Remove a second dimension here by normalizing by the full
+            # bank height
+            qs_bank = Qs_bank / self.h_banks # also implicitly divided by 
+                                             # 1, a unit downstream distance
+            
+            # Incorporate symmetry, porosity, and (if a full hydrograph is
+            # not being used) intermittency
+            # Note: Porosity here but not in cohesive case (via convention
+            # of empirical shear--detachment rule used there)
+            return 2 * qs_bank * self.dt * self.intermittency / self.porosity
+            
+            # I could change this into the > < h_banks form, as for the
+            # cohesive case (above), but am leaving it like this for now
+            # to keep in this explanation.
+
+        # Otherwise, no erosion
+        return 0
+        
     def narrow(self):
         """
         Narrow based turbulent diffusion of sediment towards the banks
-        (easy to visualize for suspended load, more of a discrete Brownian
+        (easy to visualize for suspended load; more of a discrete Brownian
         process for bed load)
         """
         # Shear velocities and bed (center) shear stress
@@ -157,6 +253,7 @@ class RiverWidth(object):
         
         if sed_conc_diff_prop == 0:
             # Record narrowing rate
+            self.db_narrowing = 0
             self.db_narrowing_series.append( self.db_narrowing )
             return # exit the function, returning None
 
