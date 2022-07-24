@@ -10,7 +10,8 @@ class RiverWidth(object):
     """
 
     def __init__(self, h_banks, S, tau_crit, k_d, b0, k_n=0.,
-                 Parker_epsilon=0.2, intermittency=1.):
+                 Parker_epsilon=0.2, intermittency=1.,
+                 D=None):
 
         # Input variables
         self.h_banks = h_banks
@@ -20,6 +21,7 @@ class RiverWidth(object):
         self.intermittency = intermittency
         self.Parker_epsilon = Parker_epsilon
         self.k_n = k_n # Narrowing coefficient
+        self.D = D # Grain diameter [m]
 
         # Input variable as initial state in list
         self.b = [b0]
@@ -29,9 +31,29 @@ class RiverWidth(object):
         self.g = 9.805
         self.rho = 1000.
         self.porosity = 0.35
+        # For sediment (used in bed load calculations)
+        self.tau_star_crit = 0.0495 # Wong & Parker (2006)
+        self.rho_s = 2650. # Quartz assumed
+
+        # Derived constants
+        if self.D is not None:
+            self.u_star_crit = ( self.tau_star_crit * \
+                                  ( (self.rho_s - self.rho) * self.g * self.D) \
+                                  / self.rho )**.5
+        else:
+            self.u_star_crit = None
+
 
         # Initialize list for all calculated flow depths
         self.h_series = [np.nan]
+        
+        # Initialize lists for the rates of widening and narrowing
+        self.db_widening_series = [np.nan]
+        self.db_narrowing_series = [np.nan]
+        
+        # And a series for the shear stress on the banks
+        # (Equals 1/(1+self.Parker_epsilon) * bed shear stress)
+        self.tau_bank_series = [np.nan]
 
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
@@ -81,57 +103,53 @@ class RiverWidth(object):
                                      * self.dt * self.intermittency
         else:
             self.db_widening = 0.
+        # Record this into the list
+        self.db_widening_series.append( self.db_widening )
 
     def narrow(self):
         """
         Narrow based turbulent diffusion of sediment towards the banks
         (easy to visualize for suspended load, more of a discrete Brownian
         process for bed load)
-
-        Here for suspended load
         """
-
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
-
-        # Sediment concentrations / exit early if no change needed
-        sed_conc_center_prop = (self.u_star_bed)**3.5
-        if sed_conc_center_prop == 0:
-            self.db_narrowing = 0
+        # Assume gravel is bed load and sand is suspended load
+        # Could update this to look at transport stage
+        if (self.D is not None) and (self.D > 0.002):
+            sed_conc_diff_prop = self.sed_conc_diff__bed_load()
+        else:
+            sed_conc_diff_prop = self.sed_conc_diff__suspended_load()
+        
+        if sed_conc_diff_prop == 0:
+            # Record narrowing rate
+            self.db_narrowing_series.append( self.db_narrowing )
             return # exit the function, returning None
-        sed_conc_edge_prop = (self.u_star_bank)**3.5
 
-        # Had previously divided by "bi" to create the gradient, but this
-        # was forgetting my own work by hand! So much of the channel is
-        # unaffected by the walls (constant velocity and stress), such that
-        # the near-wall zone of substantital velocity and stress gradients
-        # has a separate and approximately constant width.
-        # Now, the only width feedback will be the related to the powers
-        # to which the stress gradient is raised.
-        # Realism & increased stability! (Though narrow channels still can have
-        # deeper flows & steeper gradients)
-        sed_conc_grad_prop = (sed_conc_center_prop - sed_conc_edge_prop)
-
-        # Concentration gradient calcualted over min(h, h_beta):
-        # This sets distance from banks over which side-wall drag is important
-
+        # Otherwise, continue.
+            
         # Avoid div/0 (& math if not needed b/c no gradient)
-        if sed_conc_grad_prop > 0:
-            sed_conc_grad = sed_conc_grad_prop / min( self.h, self.h_banks )
+        # As in, if there is somehow no water in the channel *and* sediment
+        # is moving? Probably shouldn't need this.
+        if sed_conc_diff_prop > 0:
+            sed_conc_grad = sed_conc_diff_prop / min( self.h, self.h_banks )
 
         # K_Ey is the lateral eddy diffusivity [m^2/s].
         # Constant 0.13 is from Parker (1978, sand-bed)
         # Constant 0.16 (not used) was found in the work of Deng et al. (2003)
         # "Predicting Transverse Turbulent Diffusivity in Straight Alluvial
         # Rivers"
+        # Should also scale with lateral velocity variability that will move
+        # bedload from side to side -- though perhaps something more explict
+        # would be good for bedload.
         # This is probably assuming that h < (b/2) or something
         K_Ey = 0.13 * self.h * self.u_star_bed
         
         # k_n [unitless]: efficiency scaling term for lateral sediment
-        #                 transport, trapping, and deposition
+        #                 trapping and sticking
 
         # Lateral sediment discharge per unit channel length and width
         # [amount of sediment moving laterally / time]
@@ -154,8 +172,51 @@ class RiverWidth(object):
         # of narrowing across the full h_banks
         self.db_narrowing = 2*self.qsy*self.dt \
                                 / ( (1-self.porosity) * self.h_banks )
+        # Record narrowing rate
+        self.db_narrowing_series.append( self.db_narrowing )
         return # Unnecessary but to make sure that the fucntion always returns
                # None (same type and value)
+
+
+    def sed_conc_diff__suspended_load(self):
+        # Sediment concentrations / exit early if no change needed
+        sed_conc_center_prop = (self.u_star_bed)**3.5
+        if sed_conc_center_prop == 0:
+            return 0 # exit the function, returning no gradient
+        sed_conc_edge_prop = (self.u_star_bank)**3.5
+
+        # Had previously divided by "bi" to create the gradient, but this
+        # was forgetting my own work by hand! So much of the channel is
+        # unaffected by the walls (constant velocity and stress), such that
+        # the near-wall zone of substantital velocity and stress gradients
+        # has a separate and approximately constant width.
+        # Now, the only width feedback will be the related to the powers
+        # to which the stress gradient is raised.
+        # Realism & increased stability! (Though narrow channels still can have
+        # deeper flows & steeper gradients)
+        
+        # sed_conc_diff_prop
+        return (sed_conc_center_prop - sed_conc_edge_prop)
+
+        # Concentration gradient calcualted over min(h, h_beta):
+        # This sets distance from banks over which side-wall drag is important
+
+
+    def sed_conc_diff__bed_load(self):
+        print ("BEDLOAD")
+        # Sediment concentrations / exit early if no change needed
+        if self.u_star_bed < self.u_star_crit:
+            # If no sediment transport, no narrowing
+            return 0
+        # Otherwise, continuing
+        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit)**3
+        if self.u_star_bed < self.u_star_crit:
+            sed_conc_edge_prop = 0.
+        else:
+            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit)**3
+                
+        # sed_conc_diff_prop
+        return (sed_conc_center_prop - sed_conc_edge_prop)
 
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
@@ -168,6 +229,8 @@ class RiverWidth(object):
         self.hclass.set_b( bi_outer )
         h = self.hclass.compute_depth( Qi )
         self.tau_bank = self.rho * self.g * h * self.S / (1 + self.Parker_epsilon)
+        # Record tau_bank in its series
+        # Record narrowing rate
         if self.tau_bank > self.tau_crit:
             self.bi = self.b[-1]
             dt_remaining = dt
@@ -220,6 +283,7 @@ class RiverWidth(object):
                                 # the discharge that created current b
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
         #print(self.hclass.compute_depth( 500. ))
+        self.tau_bank_series.append( self.tau_bank )
 
     def run(self):
         for i in range(1, len(self.t)):
@@ -300,6 +364,92 @@ class RiverWidth(object):
             ax2.set_xlabel('Date', fontsize=16)
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
+        plt.tight_layout()
+        plt.show()
+        
+    def plotWideningNarrowingStress(self):
+        """
+        Plot rates of widening and narrowing alongside bank stress
+        """
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
+        plt.figure(figsize=(12,8))
+        ax1 = plt.subplot(2,1,1)
+        ax2 = plt.subplot(2,1,2)
+        ax1.plot(_t, self.db_widening_series, 'r-', linewidth=2, label='Widening')
+        ax1.plot(_t, self.db_narrowing_series, 'b-', linewidth=2, label='Narrowing')
+        ax1.legend()
+        ax1.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=16)
+        ax2.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
+        ax2.set_ylabel('Bank shear stress [Pa]', fontsize=16)
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            ax2.set_xlabel('Date', fontsize=16)
+        else:
+            ax2.set_xlabel('Days since start', fontsize=16)
+        plt.tight_layout()
+        plt.show()
+        
+    def plotWidthWideningNarrowingStress(self):
+        """
+        Plot width and rates of widening and narrowing alongside bank stress
+        """
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
+        plt.figure(figsize=(8,8))
+        ax1 = plt.subplot(3,1,1)
+        ax2 = plt.subplot(3,1,2)
+        ax3 = plt.subplot(3,1,3)
+        ax1.plot(_t, self.b, 'k-', linewidth=2)
+        ax1.set_ylabel('Channel width [m]', fontsize=12)
+        ax2.plot(_t, self.db_widening_series, 'r-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_narrowing_series, 'b-', linewidth=2, label='Narrowing')
+        ax2.legend()
+        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
+        ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
+                   color='.5', linewidth=1)
+        ax3.set_ylabel('Bank shear stress [Pa]', fontsize=12)
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            ax3.set_xlabel('Date', fontsize=16)
+        else:
+            ax3.set_xlabel('Days since start', fontsize=16)
+        plt.tight_layout()
+        plt.show()
+        
+    def plotDischargeWidthWideningNarrowingStress(self):
+        """
+        Plot discharge, width, and rates of widening and narrowing alongside
+        bank stress
+        """
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
+        plt.figure(figsize=(8,10))
+        ax0 = plt.subplot(4,1,1)
+        ax1 = plt.subplot(4,1,2)
+        ax2 = plt.subplot(4,1,3)
+        ax3 = plt.subplot(4,1,4)
+        ax0.plot(_t, self.Q, 'k-', linewidth=2)
+        ax0.set_ylabel('River discharge [m$^3$/s]', fontsize=12)
+        ax1.plot(_t, self.b, 'k-', linewidth=2)
+        ax1.set_ylabel('Channel width [m]', fontsize=12)
+        ax2.plot(_t, self.db_widening_series, 'r-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_narrowing_series, 'b-', linewidth=2, label='Narrowing')
+        ax2.legend()
+        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
+        ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
+                   color='.5', linewidth=1)
+        ax3.set_ylabel('Bank shear stress [Pa]', fontsize=12)
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            ax3.set_xlabel('Date', fontsize=16)
+        else:
+            ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
         plt.show()
         
