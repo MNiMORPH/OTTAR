@@ -190,7 +190,7 @@ class RiverWidth(object):
         Widening set by shear stress on bank and the Wong & Paker (2006) MPM
         formula
         """
-        print("Noncohesive_control")
+        #print("Noncohesive_control")
         # Tau*
         self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
                                                 self.g * self.D )
@@ -215,7 +215,7 @@ class RiverWidth(object):
             # the same as the bank height of flow depth (whichever is less: 
             # rectangular assumption: this will be less than the real length,
             # but likely not more than a factor of 2 shorter
-            Qs_bank = qs_bank_perpendicular * np.min(self.h, self.h_banks)
+            Qs_bank = qs_bank_perpendicular * min(self.h, self.h_banks)
             
             # Remove 1 dimension because we are considering a unit distance
             # for the divergence, and that all sediment produced in the
@@ -398,7 +398,7 @@ class RiverWidth(object):
 
 
     def sed_conc_diff__bed_load(self):
-        print ("BEDLOAD")
+        #print("BEDLOAD")
         # Sediment concentrations / exit early if no change needed
         if self.u_star_bed < self.u_star_crit_sed:
             # If no sediment transport, no narrowing
