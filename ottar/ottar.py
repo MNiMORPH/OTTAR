@@ -3,6 +3,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
+import warnings
 
 class RiverWidth(object):
     """
@@ -133,9 +134,13 @@ class RiverWidth(object):
             
         # Avoid div/0 (& math if not needed b/c no gradient)
         # As in, if there is somehow no water in the channel *and* sediment
-        # is moving? Probably shouldn't need this.
+        # is moving? Probably shouldn't need this. Raise warning.
         if sed_conc_diff_prop > 0:
             sed_conc_grad = sed_conc_diff_prop / min( self.h, self.h_banks )
+        else:
+            # Probably <0 (definitely?) because this would be sed motion
+            # <=0 water
+            warnings.warn("Water level <= 0 and almost certainly <0.")
 
         # K_Ey is the lateral eddy diffusivity [m^2/s].
         # Constant 0.13 is from Parker (1978, sand-bed)
