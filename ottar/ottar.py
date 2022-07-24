@@ -245,14 +245,63 @@ class RiverWidth(object):
         Narrow based turbulent diffusion of sediment towards the banks
         (easy to visualize for suspended load; more of a discrete Brownian
         process for bed load)
+        
+        Result is the sum of supended-load and bed-load processes
         """
         # Shear velocities and bed (center) shear stress
         # A bit of redundancy lies within
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
-        # Assume gravel is bed load and sand is suspended load
-        # Could update this to look at transport stage
+
+        # Use Rouse number to determine if sediment is in suspension.
+        # If so, both bed load and suspended load contribute to narrowing.
+        # (Or can, if these coefficients are nonzero.)
+        # Otherwise, it is just one.
+        
+        # Hm -- do we always have sus load in bl dominated rivers? Yeah, often.
+        # How about bl in sus load dominated rivers? Yep...
+        # Hm hmm.
+        
+        # Okay, maybe will test by always summing at first.
+        
+        # TO DO: UPDATE AND THEN MAKE SUM
+        # Once this is done, should have a fully generalized bed load + sus load
+        # system in place
+        
+        # ^^^^^^^^^^^^^^^^^^^ START WITH THIS ^^^^^^^^^^^^^^^^^^^^
+
+        _h_now =  min( self.h, self.h_banks )
+        if _h_now < 0:
+            raise ValueError('Negative flow depth given: Nonphysical.')            
+        elif _h_now == 0:
+            # Would create div0 error, but really, nothing happens
+            self.db_narrowing = 0
+        else:
+            # K_Ey is the lateral eddy diffusivity [m^2/s].
+            # Constant 0.13 is from Parker (1978, sand-bed)
+            # Constant 0.16 (not used) was found in the work of Deng et al.
+            # (2003) "Predicting Transverse Turbulent Diffusivity in Straight
+            # Alluvial Rivers"
+            # Should also scale with lateral velocity variability that will move
+            # bedload from side to side -- though perhaps something more explict
+            # would be good for bedload.
+            # This is probably assuming that h < (b/2) or something
+
+            K_Ey = 0.13 * self.h * self.u_star_bed
+        
+            # Noncohesive + cohesive
+            self.qsy = self.k_n_noncohesive * K_Ey * self.h * \
+                              self.sed_conc_diff__bed_load()/_h_now \
+                       + self.f_stickiness * K_Ey * self.h * \
+                              self.sed_conc_diff__suspended_load()/_h_now
+            self.db_narrowing = 2*self.qsy*self.dt \
+                                    / ( (1-self.porosity) * self.h_banks )
+
+        # Record narrowing rate
+        self.db_narrowing_series.append( self.db_narrowing )
+
+        """
         if (self.D is not None) and (self.D > 0.002):
             _sus_load_narrowing = False
             sed_conc_diff_prop = self.sed_conc_diff__bed_load()
@@ -299,6 +348,7 @@ class RiverWidth(object):
             self.qsy = self.f_stickiness * K_Ey * self.h * sed_conc_grad
         else:
             self.qsy = self.k_n_noncohesive * K_Ey * self.h * sed_conc_grad
+        print(self.qsy)
 
         # EVENTUALLY HOLD TWO OPTIONS HERE:
         # 1. Uniform narrowing across the full h_banks
@@ -320,6 +370,7 @@ class RiverWidth(object):
         self.db_narrowing_series.append( self.db_narrowing )
         return # Unnecessary but to make sure that the fucntion always returns
                # None (same type and value)
+        """
 
 
     def sed_conc_diff__suspended_load(self):
