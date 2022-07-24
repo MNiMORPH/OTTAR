@@ -207,7 +207,10 @@ class RiverWidth(object):
             
             # [m^2/s] -- integrated over depth
             qs_bank_perpendicular = 3.97 * ( self.tau_star_bank - 
-                                      self.tau_star_crit_sed )**(3/2.)
+                                    self.tau_star_crit_sed )**(3/2.) \
+                                    * ( (self.rho_s - self.rho)/self.rho )**.5 \
+                                    * self.g**.5\
+                                    * self.D**1.5
 
             # [m^3/s] -- integrate along length of bank
             # (trivial integral because constant stress: multiply)
