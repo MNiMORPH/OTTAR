@@ -14,6 +14,11 @@ class RiverWidth(object):
                  Parker_epsilon=0.2, intermittency=1.,
                  D=None):
 
+        # Starting values (None) -- D in this too, but set in inputs
+        self.channel_n = None
+        self.tau_crit_sed = None
+        self.u_star_crit_sed = None
+        
         # Input variables
         self.h_banks = h_banks
         self.S = S
@@ -33,17 +38,22 @@ class RiverWidth(object):
         self.rho = 1000.
         self.porosity = 0.35
         # For sediment (used in bed load calculations)
-        self.tau_star_crit = 0.0495 # Wong & Parker (2006)
+        self.tau_star_crit_sed = 0.0495 # Wong & Parker (2006): sediment grains
         self.rho_s = 2650. # Quartz assumed
 
         # Derived constants
         if self.D is not None:
-            self.u_star_crit = ( self.tau_star_crit * \
-                                  ( (self.rho_s - self.rho) * self.g * self.D) \
-                                  / self.rho )**.5
-        else:
-            self.u_star_crit = None
+            self.tau_crit_sed = self.tau_star_crit_sed * \
+                                  ( (self.rho_s - self.rho) * self.g * self.D)
+            self.u_star_crit_sed = (self.tau_crit_sed / self.rho)**.5
 
+        # Derived: Equilibrium width set by cohesion or grain size
+        if self.tau_crit_sed is None:
+            self.equilibrium_width_set_by_cohesion = True
+        elif self.tau_crit >= self.tau_crit_sed:
+            self.equilibrium_width_set_by_cohesion = True
+        else:
+            self.equilibrium_width_set_by_cohesion = False
 
         # Initialize list for all calculated flow depths
         self.h_series = [np.nan]
@@ -64,14 +74,10 @@ class RiverWidth(object):
         """
         Hard-code for double Manning
         """
+        self.channel_n = channel_n
         self.hclass = FlowDepthDoubleManning()
         self.hclass.initialize( channel_n, fp_k, fp_P,
                                 self.h_banks, self.b[-1], self.S)
-
-        # Derived constant -- Manning's n required
-        self.k_b__eq = ( self.rho * self.g /
-                         ((1+self.Parker_epsilon) * self.tau_crit) )**(5/3.) \
-                       * channel_n
 
 
     def initialize_timeseries(self, t, Q):
@@ -81,10 +87,34 @@ class RiverWidth(object):
     def get_equilibriumWidth(self, Q_eq):
         """
         Steady-state width under erosion only as t-->infinity
-        Only in-channel flow: Using this as bankfull
+        Only in-channel flow: Using provided h as bankfull
         No form drag assumed
         """
-        b_eq = self.k_b__eq * Q_eq * self.S**(7/6.)
+        
+        # Cohesion sets ultimate width (Dunne & Jerolmack, 2018, & following)
+        if self.equilibrium_width_set_by_cohesion:
+            # Manning's n required
+            if self.channel_n is None:
+                warnings.warn("Manning's n must be set to compute the "+
+                               "equilibrium width\n"+
+                               "of a bank-cohesion-set channel.")
+            # Ensure that this is still consistent with Nilay's updates to the
+            # sand-bed equation set once she finishes
+            else:
+                self.k_b__eq = ( self.rho * self.g /
+                                 ((1+self.Parker_epsilon) * 
+                                 self.tau_crit) )**(5/3.) \
+                                 * self.channel_n
+                b_eq = self.k_b__eq * Q_eq * self.S**(7/6.)
+
+        # Grain weight sets ultimate width (Parker, 1978, & following)
+        else:
+            self.k_b__eq = 0.17 / (self.g**.5 * 
+                                    ((self.rho_s - self.rho)/self.rho)**(5/3.)
+                                    * (1+self.Parker_epsilon)**(5/3.)
+                                    * self.tau_star_crit_sed**(5/3.) )
+            b_eq = self.k_b__eq * Q_eq * self.S**(7/6.) / self.D**1.5
+        
         return b_eq
 
     def widen(self):
@@ -210,15 +240,15 @@ class RiverWidth(object):
     def sed_conc_diff__bed_load(self):
         print ("BEDLOAD")
         # Sediment concentrations / exit early if no change needed
-        if self.u_star_bed < self.u_star_crit:
+        if self.u_star_bed < self.u_star_crit_sed:
             # If no sediment transport, no narrowing
             return 0
         # Otherwise, continuing
-        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit)**3
-        if self.u_star_bed < self.u_star_crit:
+        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit_sed)**3
+        if self.u_star_bed < self.u_star_crit_sed:
             sed_conc_edge_prop = 0.
         else:
-            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit)**3
+            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit_sed)**3
                 
         # sed_conc_diff_prop
         return (sed_conc_center_prop - sed_conc_edge_prop)
