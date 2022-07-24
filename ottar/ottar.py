@@ -10,8 +10,8 @@ class RiverWidth(object):
     Transient adjustments to river-channel width
     """
 
-    def __init__(self, h_banks, S, tau_crit, k_d, b0, k_n=0.,
-                 Parker_epsilon=0.2, intermittency=1.,
+    def __init__(self, h_banks, S, tau_crit, k_d, b0, f_stickiness=0.,
+                 k_n_noncohesive=0., Parker_epsilon=0.2, intermittency=1.,
                  D=None):
 
         # Starting values (None) -- D in this too, but set in inputs
@@ -24,10 +24,17 @@ class RiverWidth(object):
         self.S = S
         self.tau_crit = tau_crit # Critical stress to detach particles from bank
         self.tau_crit_equilibrium = self.tau_crit # sets ultimate channel width
-        self.k_d = k_d # Bank rate constant
-        self.intermittency = intermittency
+        self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
+        self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
+                                         # of sediment transferred to bank that
+                                         # stays there & leads to narrowing 
+        self.k_n_noncohesive = k_n_noncohesive # narrowing coefficient for
+                                               # noncohesive seds:
+                                               # lateral velocity efficiency
+                                               # (how much eddy diffusion
+                                               # affects the bed?) + sticking
         self.Parker_epsilon = Parker_epsilon
-        self.k_n = k_n # Narrowing coefficient
+        self.intermittency = intermittency
         self.D = D # Grain diameter [m]
 
         # Input variable as initial state in list
@@ -247,8 +254,10 @@ class RiverWidth(object):
         # Assume gravel is bed load and sand is suspended load
         # Could update this to look at transport stage
         if (self.D is not None) and (self.D > 0.002):
+            _sus_load_narrowing = False
             sed_conc_diff_prop = self.sed_conc_diff__bed_load()
         else:
+            _sus_load_narrowing = True
             sed_conc_diff_prop = self.sed_conc_diff__suspended_load()
         
         if sed_conc_diff_prop == 0:
@@ -280,13 +289,16 @@ class RiverWidth(object):
         # This is probably assuming that h < (b/2) or something
         K_Ey = 0.13 * self.h * self.u_star_bed
         
-        # k_n [unitless]: efficiency scaling term for lateral sediment
-        #                 trapping and sticking
+        # f_stickiness [unitless]: efficiency scaling term for lateral sediment
+        #                          trapping and sticking
 
         # Lateral sediment discharge per unit channel length and width
         # [amount of sediment moving laterally / time]
-        # (will declare it to be volumetric and define k_n accordingly)
-        self.qsy = self.k_n * K_Ey * self.h * sed_conc_grad
+        # (will declare it to be volumetric and define f_stickiness accordingly)
+        if _sus_load_narrowing:
+            self.qsy = self.f_stickiness * K_Ey * self.h * sed_conc_grad
+        else:
+            self.qsy = self.k_n_noncohesive * K_Ey * self.h * sed_conc_grad
 
         # EVENTUALLY HOLD TWO OPTIONS HERE:
         # 1. Uniform narrowing across the full h_banks
