@@ -402,6 +402,9 @@ class RiverWidth(object):
 
     def sed_conc_diff__bed_load(self):
         #print("BEDLOAD")
+        # Early exit if no grain size specified: no bed load desired
+        if self.D is None:
+            return 0
         # Sediment concentrations / exit early if no change needed
         if self.u_star_bed < self.u_star_crit_sed:
             # If no sediment transport, no narrowing
