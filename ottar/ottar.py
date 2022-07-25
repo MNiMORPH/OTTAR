@@ -467,35 +467,6 @@ class RiverWidth(object):
                                 # the discharge that created current b
         self.b.append(self.bi) # add current b to list of b
 
-    """
-    def update__simple_time_step(self, dt, Qi=None, hi=None):
-        if Qi is None and hi is None:
-            raise TypeError('Either discharge or depth must be set.')
-        elif Qi is not None and hi is not None:
-            raise TypeError('Only one of discharge and depth may be set.')
-        self.bi = self.b[-1]
-        # Update for the Manning calc
-        self.hclass.set_b( self.bi )
-        # Might find a different way for this going forward
-        self.dt = dt
-        if Qi is not None:
-            # Current discharge and shear stress
-            # Is this updated for the rating-curve 2x Manning approach?
-            h = self.hclass.compute_depth( Qi )
-            self.tau_bank = self.rho * self.g * h * self.S \
-                    / (1 + self.Parker_epsilon)
-        self.h = h # For the widening, at least for now
-        # Compute widening
-        self.widen()
-        #self.b.append(self.bi + self.db_widening)
-        self.narrow()
-        self.h_series.append(h) # h is based on previous b but associated with
-                                # the discharge that created current b
-        self.b.append(self.bi + self.db_widening - self.db_narrowing)
-        #print(self.hclass.compute_depth( 500. ))
-        self.tau_bank_series.append( self.tau_bank )
-    """
-
     def update__simple_time_step(self, dt, Qi):
         """
         Simple Euler forward.
