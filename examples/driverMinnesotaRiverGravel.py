@@ -20,9 +20,9 @@ streamflowData = pd.read_csv('MN_Jordan_daily.csv')
 streamflowData['Timestamp'] = streamflowData['Timestamp'].astype('datetime64[ns]')
 streamflowData = streamflowData.sort_values('Timestamp')
 
-rw = ottar.RiverWidth(h_banks=6., S=1E-4, tau_crit=5, k_d=2E-7,
-                                f_stickiness=5E-2, k_n_noncohesive=1E-2,
-                                b0=65., D=.5E-3)
+rw = ottar.RiverWidth(h_banks=6., S=1E-3, tau_crit=5, k_d=2E-7,
+                                f_stickiness=0, k_n_noncohesive=.2,
+                                b0=65., D=.04)
 
 t = streamflowData['Timestamp']
 Q = streamflowData['Discharge (cfs)'] * cfs_to_m3s
