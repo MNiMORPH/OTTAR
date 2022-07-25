@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/261265317.svg)](https://zenodo.org/badge/latestdoi/261265317)
 
-# OTTAR
+# :otter: OTTAR
 
 Ode To Transient Ancho de los Rivers
 
