@@ -654,6 +654,39 @@ class RiverWidth(object):
         plt.tight_layout()
         plt.show()
         
+    def plotDischargeWidthWideningNarrowingGrainstressratio(self):
+        """
+        Plot discharge, width, and rates of widening and narrowing alongside
+        bank stress divided by critical stress to move particles
+        """
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
+        plt.figure(figsize=(8,10))
+        ax0 = plt.subplot(4,1,1)
+        ax1 = plt.subplot(4,1,2)
+        ax2 = plt.subplot(4,1,3)
+        ax3 = plt.subplot(4,1,4)
+        ax0.plot(_t, self.Q, 'k-', linewidth=2)
+        ax0.set_ylabel('River discharge [m$^3$/s]', fontsize=12)
+        ax1.plot(_t, self.b, 'k-', linewidth=2)
+        ax1.set_ylabel('Channel width [m]', fontsize=12)
+        ax2.plot(_t, self.db_widening_series, 'r-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_narrowing_series, 'b-', linewidth=2, label='Narrowing')
+        ax2.legend()
+        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax3.plot(_t, np.array(self.tau_bank_series)/self.tau_crit_sed, 'k-', linewidth=2)
+        ax3.plot( [_t[0], _t[-1]] , [1, 1], '--', 
+                   color='.5', linewidth=1)
+        ax3.set_ylabel('Ratio: Bank stress \n/ critical stress', fontsize=12)
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            ax3.set_xlabel('Date', fontsize=16)
+        else:
+            ax3.set_xlabel('Days since start', fontsize=16)
+        plt.tight_layout()
+        plt.show()
+        
     def write_csv(self, filename):
         """
         Write CSV of the DataFrame:
