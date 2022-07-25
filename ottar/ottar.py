@@ -10,7 +10,7 @@ class RiverWidth(object):
     Transient adjustments to river-channel width
     """
 
-    def __init__(self, h_banks, S, tau_crit, k_d, b0, f_stickiness=0.,
+    def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, f_stickiness=0.,
                  k_n_noncohesive=0., Parker_epsilon=0.2, intermittency=1.,
                  D=None):
 
@@ -58,8 +58,9 @@ class RiverWidth(object):
         # Derived: Equilibrium width set by cohesion or grain size
         if self.tau_crit_sed is None:
             self.equilibrium_width_set_by_cohesion = True
-        elif self.tau_crit >= self.tau_crit_sed:
-            self.equilibrium_width_set_by_cohesion = True
+        elif self.tau_crit is not None:
+            if self.tau_crit >= self.tau_crit_sed:
+                self.equilibrium_width_set_by_cohesion = True
         else:
             self.equilibrium_width_set_by_cohesion = False
 
@@ -141,9 +142,15 @@ class RiverWidth(object):
         # That is, unless D is not set, in which case, a fully cohesive system
         # is assumed
         
+        # If not specified to evolve via bedload
         if self.D is None:
             self.db_widening = self.widen_cohesive()
             self.db_widening_cohesive_control.append( True )
+        # Else if not specified to evolve via suspended load
+        elif self.tau_crit is None:
+            self.db_widening = self.widen_noncohesive()
+            self.db_widening_cohesive_control.append( False )
+        # Otherwise, use rate-limiting one of the both
         else:
             db_noncohesive = self.widen_noncohesive()
             db_cohesive = self.widen_cohesive()
