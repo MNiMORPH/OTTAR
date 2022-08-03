@@ -48,6 +48,7 @@ class RiverWidth(object):
         # For sediment (used in bed load calculations)
         self.tau_star_crit_sed = 0.0495 # Wong & Parker (2006): sediment grains
         self.rho_s = 2650. # Quartz assumed
+        self.SECONDS_IN_DAY = 86400
 
         # Derived constants
         if self.D is not None:
@@ -537,6 +538,16 @@ class RiverWidth(object):
         self.df['Channel width [m]'] = self.b
         self.df['Water depth [m]'] = self.h_series
 
+        # Generate additional numpy arrays
+        self.db_widening_series = np.array(self.db_widening_series)
+        self.db_narrowing_series = np.array(self.db_narrowing_series)
+        
+        # And create rates per day
+        dt_days = np.diff(self.t) / self.SECONDS_IN_DAY
+        dt_days = np.hstack(( [np.nan], dt_days ))
+        self.db_dt__day__widening_series = self.db_widening_series / dt_days
+        self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
+
     def plotb(self):
         """
         Plot channel width over time
@@ -586,10 +597,10 @@ class RiverWidth(object):
         plt.figure(figsize=(12,8))
         ax1 = plt.subplot(2,1,1)
         ax2 = plt.subplot(2,1,2)
-        ax1.plot(_t, self.db_widening_series, 'k-', linewidth=2, label='Widening')
-        ax1.plot(_t, self.db_narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
+        ax1.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
+        ax1.plot(_t, self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
         ax1.legend()
-        ax1.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=16)
+        ax1.set_ylabel('Channel width\nchange rate [m/day]', fontsize=16)
         ax2.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax2.set_ylabel('Bank shear stress [Pa]', fontsize=16)
         if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
@@ -613,10 +624,10 @@ class RiverWidth(object):
         ax3 = plt.subplot(3,1,3)
         ax1.plot(_t, self.b, 'k-', linewidth=2)
         ax1.set_ylabel('Channel width [m]', fontsize=12)
-        ax2.plot(_t, self.db_widening_series, 'k-', linewidth=2, label='Widening')
-        ax2.plot(_t, self.db_narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
+        ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
         ax2.legend()
-        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
                    color='.5', linewidth=1)
@@ -646,10 +657,10 @@ class RiverWidth(object):
         ax0.set_ylabel('River discharge [m$^3$/s]', fontsize=12)
         ax1.plot(_t, self.b, 'k-', linewidth=2)
         ax1.set_ylabel('Channel width [m]', fontsize=12)
-        ax2.plot(_t, self.db_widening_series, 'k-', linewidth=2, label='Widening')
-        ax2.plot(_t, self.db_narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
+        ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
         ax2.legend()
-        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
                    color='.5', linewidth=1)
@@ -679,10 +690,10 @@ class RiverWidth(object):
         ax0.set_ylabel('River discharge [m$^3$/s]', fontsize=12)
         ax1.plot(_t, self.b, 'k-', linewidth=2)
         ax1.set_ylabel('Channel width [m]', fontsize=12)
-        ax2.plot(_t, self.db_widening_series, 'k-', linewidth=2, label='Widening')
-        ax2.plot(_t, self.db_narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
+        ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
+        ax2.plot(_t, self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
         ax2.legend()
-        ax2.set_ylabel('Channel width change rate\n[m/day (assumed)]', fontsize=12)
+        ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, np.array(self.tau_bank_series)/self.tau_crit_sed, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [1, 1], '--', 
                    color='.5', linewidth=1)
