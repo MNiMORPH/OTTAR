@@ -545,7 +545,18 @@ class RiverWidth(object):
         self.db_narrowing_series = np.array(self.db_narrowing_series)
         
         # And create rates per day
-        dt_days = np.diff(self.t) / self.SECONDS_IN_DAY
+        
+        # Query if it is a timestamp
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            dt_ts = np.diff(self.t)
+            dt_days = []
+            for _dt in dt_ts:
+                dt_days.append( _dt.total_seconds() / self.SECONDS_IN_DAY )
+            dt_days = np.array(dt_days)
+        # Assume numeric otherwise; maybe bad idea?
+        else:
+            dt_days = np.diff(self.t) / self.SECONDS_IN_DAY
+        # nan at start -- don't have an initial elapsed time amount
         dt_days = np.hstack(( [np.nan], dt_days ))
         self.db_dt__day__widening_series = self.db_widening_series / dt_days
         self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
