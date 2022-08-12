@@ -251,6 +251,31 @@ class RiverWidth(object):
         # Otherwise, no erosion
         return 0
         
+    def narrow_suspended_load(self, recompute_utkh=False):
+        if recompute_utkh == True:
+            self.compute__u_star__tau_bed()
+            self.K_Ey = 0.13 * h * self.u_star_bed
+            self.h_against_banks =  min( self.h, self.h_banks )
+        # Narrowing
+        qsy = self.f_stickiness * self.K_Ey * self.h * \
+                self.sed_conc_diff__suspended_load() / self.h_against_banks
+        return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
+
+    def narrow_bed_load(self, recompute_utkh=False):
+        if recompute_utkh == True:
+            self.compute__u_star__tau_bed()
+            self.K_Ey = 0.13 * h * self.u_star_bed
+            self.h_against_banks =  min( self.h, self.h_banks )
+        # Narrowing
+        qsy = self.k_n_noncohesive * self.K_Ey * self.h * \
+                self.sed_conc_diff__bed_load() / self.h_against_banks
+        return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
+
+    def compute__u_star__tau_bed(self):
+        self.u_star_bank = (self.tau_bank / self.rho)**.5
+        self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
+        self.u_star_bed = (self.tau_bed / self.rho)**.5
+
     def narrow(self):
         """
         Narrow based turbulent diffusion of sediment towards the banks
@@ -259,33 +284,11 @@ class RiverWidth(object):
         
         Result is the sum of supended-load and bed-load processes
         """
-        # Shear velocities and bed (center) shear stress
-        # A bit of redundancy lies within
-        self.u_star_bank = (self.tau_bank / self.rho)**.5
-        self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
-        self.u_star_bed = (self.tau_bed / self.rho)**.5
 
-        # Use Rouse number to determine if sediment is in suspension.
-        # If so, both bed load and suspended load contribute to narrowing.
-        # (Or can, if these coefficients are nonzero.)
-        # Otherwise, it is just one.
-        
-        # Hm -- do we always have sus load in bl dominated rivers? Yeah, often.
-        # How about bl in sus load dominated rivers? Yep...
-        # Hm hmm.
-        
-        # Okay, maybe will test by always summing at first.
-        
-        # TO DO: UPDATE AND THEN MAKE SUM
-        # Once this is done, should have a fully generalized bed load + sus load
-        # system in place
-        
-        # ^^^^^^^^^^^^^^^^^^^ START WITH THIS ^^^^^^^^^^^^^^^^^^^^
-
-        _h_now =  min( self.h, self.h_banks )
-        if _h_now < 0:
+        self.h_against_banks =  min( self.h, self.h_banks )
+        if self.h_against_banks < 0:
             raise ValueError('Negative flow depth given: Nonphysical.')            
-        elif _h_now == 0:
+        elif self.h_against_banks == 0:
             # Would create div0 error, but really, nothing happens
             self.db_narrowing = 0
         else:
@@ -299,16 +302,15 @@ class RiverWidth(object):
             # would be good for bedload.
             # This is probably assuming that h < (b/2) or something
 
-            K_Ey = 0.13 * self.h * self.u_star_bed
-        
-            # Noncohesive + cohesive
-            self.qsy = self.k_n_noncohesive * K_Ey * self.h * \
-                              self.sed_conc_diff__bed_load()/_h_now \
-                       + self.f_stickiness * K_Ey * self.h * \
-                              self.sed_conc_diff__suspended_load()/_h_now
-            self.db_narrowing = 2*self.qsy*self.dt \
-                                    / ( (1-self.porosity) * self.h_banks )
+            # Shear velocities and bed (center) shear stress
+            # A bit of redundancy lies within
+            self.compute__u_star__tau_bed()
+            self.K_Ey = 0.13 * self.h * self.u_star_bed
 
+            # Noncohesive (bed load) + cohesive (suspended load)
+            self.db_narrowing = self.narrow_bed_load() + \
+                                self.narrow_suspended_load()
+            
         # Record narrowing rate
         self.db_narrowing_series.append( self.db_narrowing )
 
