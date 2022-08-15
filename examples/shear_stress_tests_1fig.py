@@ -56,7 +56,7 @@ ax.vlines(tau_banks_bf, yl[0], yl[1], colors='0.5', linestyles='dashed')
 ax.text(tau_banks_bf + np.abs(np.diff(xl))*0.01,
         yl[1] - np.abs(np.diff(yl))*0.1,
         horizontalalignment='left', verticalalignment='top',
-        s=r'$\tau_{\beta,bf}$')
+        s=r'$\tau_{\beta,\mathrm{bf}}$')
 ax.set_ylabel("$\dot{b}$: Widening Rate\n(Cohesive)\n[m/day]")
 
 # Widening -- noncohesive only
@@ -146,9 +146,9 @@ ax.text(tau_crit + np.abs(np.diff(xl))*0.01,
 ax.set_xlabel(r"$\tau_\beta$: Bank Shear Stress [Pa]")
 ax.set_ylabel("$\dot{b}$: Narrowing Rate\n(Bed Load)\n[m/day]")
 
-plt.savefig('shear_stress__widening__narrowing.pdf')
-
 plt.tight_layout()
+
+plt.savefig('shear_stress__widening__narrowing.pdf')
 
 plt.show()
 
