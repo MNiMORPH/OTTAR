@@ -42,7 +42,7 @@ class RiverWidth(object):
         self.bi = self.b[-1]
 
         # Constants
-        self.g = 9.805
+        self.g = 9.807
         self.rho = 1000.
         self.porosity = 0.35
         # For sediment (used in bed load calculations)
