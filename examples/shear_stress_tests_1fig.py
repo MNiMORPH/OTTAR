@@ -20,7 +20,7 @@ h = []
 db = []
 for Qi in Qi_range:
     Q = np.hstack(Qi*np.ones(2))
-    rw = ottar.RiverWidth(h_banks=1., S=1E-3, tau_crit=2., k_d=1E-6,
+    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=2., k_d=1E-6, k_E=0.,
                                     f_stickiness=0., k_n_noncohesive=0.,
                                     b0=20., D=None)
     rw.initialize_flow_calculations(0.03, 100, 1.5)
@@ -64,9 +64,9 @@ tau_bank = []
 db = []
 for Qi in Qi_range:
     Q = np.hstack(Qi*np.ones(2))
-    rw = ottar.RiverWidth(h_banks=1., S=1E-3, tau_crit=None, k_d=1E-6,
+    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=None, k_d=0., k_E=0.1,
                                     f_stickiness=0., k_n_noncohesive=0.,
-                                    b0=20., D=8E-3)
+                                    b0=20., D=6E-3)
     rw.initialize_flow_calculations(0.03, 100, 1.5)
     rw.initialize_timeseries(t,Q)
     rw.run()
@@ -89,6 +89,11 @@ ax.text(tau_crit + np.abs(np.diff(xl))*0.01,
         yl[1] - np.abs(np.diff(yl))*0.1,
         horizontalalignment='left', verticalalignment='top',
         s=r'$\tau_{n,c}$')
+ax.vlines(tau_banks_bf, yl[0], yl[1], colors='0.5', linestyles='dashed')
+ax.text(tau_banks_bf + np.abs(np.diff(xl))*0.01,
+        yl[1] - np.abs(np.diff(yl))*0.1,
+        horizontalalignment='left', verticalalignment='top',
+        s=r'$\tau_{\beta,\mathrm{bf}}$')
 ax.set_ylabel("$\dot{b}$: Widening Rate\n(Noncohesive)\n[m/day]")
 
 # Narrowing -- suspended load
@@ -96,9 +101,9 @@ tau_bank = []
 db = []
 for Qi in Qi_range:
     Q = np.hstack(Qi*np.ones(2))
-    rw = ottar.RiverWidth(h_banks=1., S=1E-3, tau_crit=1., k_d=0.,
+    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=1., k_d=0., k_E=0.,
                                     f_stickiness=1., k_n_noncohesive=0.,
-                                    b0=20., D=8E-3)
+                                    b0=20., D=6E-3)
     rw.initialize_flow_calculations(0.03, 100, 1.5)
     rw.initialize_timeseries(t,Q)
     rw.run()
@@ -119,9 +124,9 @@ tau_bank = []
 db = []
 for Qi in Qi_range:
     Q = np.hstack(Qi*np.ones(2))
-    rw = ottar.RiverWidth(h_banks=1., S=1E-3, tau_crit=100., k_d=0,
+    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=100., k_d=0, k_E=0.,
                                     f_stickiness=0., k_n_noncohesive=1.,
-                                    b0=20., D=8E-3)
+                                    b0=20., D=6E-3)
     rw.initialize_flow_calculations(0.03, 100, 1.5)
     rw.initialize_timeseries(t,Q)
     rw.run()
