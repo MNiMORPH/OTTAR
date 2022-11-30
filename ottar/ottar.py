@@ -420,11 +420,19 @@ class RiverWidth(object):
             # If no sediment transport, no narrowing
             return 0
         # Otherwise, continuing
-        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit_sed)**3
+        # Radice: primarily concentration difference, with velocity
+        # approximately constant.
+        # Suspended sediment: 1x u* for velocity, and the rest for
+        # concentration (then integrate over depth if qs desired)
+        # (which it isn't, here)
+        # Similarly I posit, u* **2 --> concentration
+        #                    u*     --> velocity
+        # for u* **3 total in relationship (w/ critical stress, of course)
+        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit_sed)**2
         if self.u_star_bed < self.u_star_crit_sed:
             sed_conc_edge_prop = 0.
         else:
-            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit_sed)**3
+            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit_sed)**2
                 
         # sed_conc_diff_prop
         return (sed_conc_center_prop - sed_conc_edge_prop)
