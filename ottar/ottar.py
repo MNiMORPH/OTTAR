@@ -242,7 +242,8 @@ class RiverWidth(object):
             # not being used) intermittency
             # Note: Porosity here but not in cohesive case (via convention
             # of empirical shear--detachment rule used there)
-            return 2 * qs_bank * self.dt * self.intermittency / self.porosity
+            return 2 * qs_bank * self.dt * self.intermittency / \
+                (1 - self.porosity)
             
             # I could change this into the > < h_banks form, as for the
             # cohesive case (above), but am leaving it like this for now
