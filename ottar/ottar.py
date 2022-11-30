@@ -10,9 +10,10 @@ class RiverWidth(object):
     Transient adjustments to river-channel width
     """
 
-    def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, f_stickiness=0.,
-                 k_n_noncohesive=0., Parker_epsilon=0.2, intermittency=1.,
-                 D=None):
+    def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, k_E=None,
+                       f_stickiness=0., k_n_noncohesive=0.,
+                       Parker_epsilon=0.2, intermittency=1.,
+                       D=None):
 
         # Starting values (None) -- D in this too, but set in inputs
         self.channel_n = None
@@ -25,6 +26,7 @@ class RiverWidth(object):
         self.tau_crit = tau_crit # Critical stress to detach particles from bank
         self.tau_crit_equilibrium = self.tau_crit # sets ultimate channel width
         self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
+        self.k_E = k_E # Noncohesive substrate: entrainment-rate coefficient
         self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
                                          # of sediment transferred to bank that
                                          # stays there & leads to narrowing 
@@ -195,8 +197,10 @@ class RiverWidth(object):
 
     def widen_noncohesive(self):
         """
-        Widening set by shear stress on bank and the Wong & Paker (2006) MPM
-        formula
+        Widening set by sediment entrainment that is proportional to
+        (tau* - tau*_c).
+        All entrained sediment tumbles to the channel bed, where tau* is
+        higher and the sediment is transported away.
         """
         #print("Noncohesive_control")
         # Tau*
@@ -204,53 +208,35 @@ class RiverWidth(object):
                                                 self.g * self.D )
 
         if self.tau_star_bank > self.tau_star_crit_sed:
-  
-            # This will just be in one place along the bank
-            # And therefore needs to be integrated vertically
             # We assume the bank shape of Parker (1978), which is plausible
             # and allows the entire bank region to experience
             # the exact same shear stress regardless of flow depth.
             # We unexactly but not so unrealistically assume that this
             # shape is similar regardless of the flow depth.
             
-            # [m^2/s] -- integrated over depth
-            qs_bank_perpendicular = 3.97 * ( self.tau_star_bank - 
-                                    self.tau_star_crit_sed )**(3/2.) \
-                                    * ( (self.rho_s - self.rho)/self.rho )**.5 \
-                                    * self.g**.5\
-                                    * self.D**1.5
+            # 2* because erosion & deposition are symmetrical across banks
 
-            # [m^3/s] -- integrate along length of bank
-            # (trivial integral because constant stress: multiply)
-            # Assume that the curved distance along the bank is approximately
-            # the same as the bank height of flow depth (whichever is less: 
-            # rectangular assumption: this will be less than the real length,
-            # but likely not more than a factor of 2 shorter
-            Qs_bank = qs_bank_perpendicular * min(self.h, self.h_banks)
-            
-            # Remove 1 dimension because we are considering a unit distance
-            # for the divergence, and that all sediment produced in the
-            # near-bank zone then tumbles into the deeper parts of the channel
-            # rather than redepositing on the bank.
-            
-            # Remove a second dimension here by normalizing by the full
-            # bank height
-            qs_bank = Qs_bank / self.h_banks # also implicitly divided by 
-                                             # 1, a unit downstream distance
-            
             # Incorporate symmetry, porosity, and (if a full hydrograph is
             # not being used) intermittency
             # Note: Porosity here but not in cohesive case (via convention
             # of empirical shear--detachment rule used there)
-            return 2 * qs_bank * self.dt * self.intermittency / \
-                (1 - self.porosity)
-            
-            # I could change this into the > < h_banks form, as for the
-            # cohesive case (above), but am leaving it like this for now
-            # to keep in this explanation.
-
+            if self.h < self.h_banks:
+                db_widening = 2 * self.k_E * self.h/self.h_banks \
+                           * ( self.tau_star_bank - self.tau_star_crit_sed ) \
+                           * self.D \
+                           * self.dt * self.intermittency \
+                           / (1 - self.porosity)
+            else:
+                db_widening = 2 * self.k_E \
+                           * ( self.tau_star_bank - self.tau_star_crit_sed ) \
+                           * self.D \
+                           * self.dt * self.intermittency \
+                           / (1 - self.porosity)
         # Otherwise, no erosion
-        return 0
+        else:
+            db_widening = 0.
+
+        return db_widening
         
     def narrow_suspended_load(self, recompute_utkh=False):
         if recompute_utkh == True:
