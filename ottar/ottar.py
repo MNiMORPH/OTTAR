@@ -416,7 +416,7 @@ class RiverWidth(object):
         #                    u*     --> velocity
         # for u* **3 total in relationship (w/ critical stress, of course)
         sed_conc_center_prop = (self.u_star_bed - self.u_star_crit_sed)**2
-        if self.u_star_bed < self.u_star_crit_sed:
+        if self.u_star_bank < self.u_star_crit_sed:
             sed_conc_edge_prop = 0.
         else:
             sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit_sed)**2
