@@ -11,7 +11,7 @@ import numpy as np
 #"""
 t = np.arange(0, 24*60.*60.+1, 24*60.*60.)
 
-Qi_range = np.logspace(-1,2,50)
+Qi_range = np.logspace(-1,2,200)
 
 # Widening -- cohesive only
 # Strange scoop: Error in code?
@@ -124,7 +124,7 @@ tau_bank = []
 db = []
 for Qi in Qi_range:
     Q = np.hstack(Qi*np.ones(2))
-    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=100., k_d=0, k_E=0.,
+    rw = ottar.RiverWidth(h_banks=1.2, S=1E-3, tau_crit=None, k_d=0, k_E=0.,
                                     f_stickiness=0., k_n_noncohesive=1.,
                                     b0=20., D=6E-3)
     rw.initialize_flow_calculations(0.03, 100, 1.5)
@@ -137,7 +137,9 @@ for Qi in Qi_range:
 tau_star_bank = np.array(tau_bank) / ( (rw.rho_s - rw.rho) * rw.g * rw.D )
 tau_star_ratio = tau_star_bank / rw.tau_star_crit_sed
 
-tau_crit = rw.tau_star_crit_sed * ( (rw.rho_s - rw.rho) * rw.g * rw.D )
+# For bed
+tau_crit = rw.tau_star_crit_sed * ( (rw.rho_s - rw.rho) * rw.g * rw.D ) \
+              / (1 + rw.Parker_epsilon)
 
 ax = plt.subplot(4,1,4)
 ax.plot(tau_bank, db, 'k-')
@@ -147,7 +149,7 @@ ax.vlines(tau_crit, yl[0], yl[1], colors='0.5', linestyles='dashed')
 ax.text(tau_crit + np.abs(np.diff(xl))*0.01,
         yl[0] + np.abs(np.diff(yl))*0.1,
         horizontalalignment='left', verticalalignment='bottom',
-        s=r'$\tau_{n,c}$')
+        s=r'$\tau_{n,c}$ (bed equiv. for bank stress)')
 ax.set_xlabel(r"$\tau_\beta$: Bank Shear Stress [Pa]")
 ax.set_ylabel("$\dot{b}$: Narrowing Rate\n(Bed Load)\n[m/day]")
 
