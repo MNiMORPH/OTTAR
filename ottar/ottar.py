@@ -253,7 +253,7 @@ class RiverWidth(object):
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * h * self.u_star_bed
         # Narrowing
-        qsy = self.k_n_noncohesive * self.K_Ey * self.h_against_banks * \
+        qsy = self.k_n_noncohesive * self.K_Ey * self.D * \
                 self.sed_conc_diff__bed_load()
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
