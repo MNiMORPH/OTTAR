@@ -248,8 +248,8 @@ class RiverWidth(object):
                 self.sed_conc_diff__suspended_load()
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
-    def narrow_bed_load(self, recompute_utkh=False):
-        if recompute_utkh == True:
+    def narrow_bed_load(self, recompute_utk=False):
+        if recompute_utk == True:
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * h * self.u_star_bed
         # Narrowing
@@ -273,23 +273,26 @@ class RiverWidth(object):
 
         self.h_against_banks =  min( self.h, self.h_banks )
         if self.h_against_banks < 0:
+            print("ERROR: Channel width < -0!")
             raise ValueError('Negative flow depth given: Nonphysical.')            
         elif self.h_against_banks == 0:
-            # Would create div0 error, but really, nothing happens
+            # No water in channel (!)
+            print("Note: No water in channel.")
             self.db_narrowing = 0
         else:
+            # Shear velocities and bed (center) shear stress
+            # A bit of redundancy lies within.
+            # 
             # K_Ey is the lateral eddy diffusivity [m^2/s].
             # Constant 0.13 is from Parker (1978, sand-bed)
             # Constant 0.16 (not used) was found in the work of Deng et al.
             # (2003) "Predicting Transverse Turbulent Diffusivity in Straight
             # Alluvial Rivers"
-            # Should also scale with lateral velocity variability that will move
-            # bedload from side to side -- though perhaps something more explict
-            # would be good for bedload.
             # This is probably assuming that h < (b/2) or something
-
-            # Shear velocities and bed (center) shear stress
-            # A bit of redundancy lies within
+            # 
+            # K_Ey Should also scale with lateral velocity variability that
+            # moves bedload from side to side
+            # This could be good to revisit experimentally
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * self.h * self.u_star_bed
 
