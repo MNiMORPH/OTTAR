@@ -242,7 +242,7 @@ class RiverWidth(object):
         if recompute_utkh == True:
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * h * self.u_star_bed
-        # Narrowing
+        # Narrowing -- flipped sign convention of conc diff (so no $-$ needed)
         qsy = self.f_stickiness * self.K_Ey * \
                 self.sed_conc_diff__suspended_load()
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
@@ -388,23 +388,34 @@ class RiverWidth(object):
         sed_conc_center_prop = (self.u_star_bed)**3.5
         if sed_conc_center_prop == 0:
             return 0 # exit the function, returning no gradient
-        sed_conc_edge_prop = (self.u_star_bank)**3.5
+        # Flows in excess of bank height are approximately unaffected by
+        # differential drag: gradient tops out at that for h = h_banks
+        if self.h < self.h_banks:
+            sed_conc_edge_prop = (self.u_star_bank)**3.5
 
-        # Had previously divided by "bi" to create the gradient, but this
-        # was forgetting my own work by hand! So much of the channel is
-        # unaffected by the walls (constant velocity and stress), such that
-        # the near-wall zone of substantital velocity and stress gradients
-        # has a separate and approximately constant width.
-        # Now, the only width feedback will be the related to the powers
-        # to which the stress gradient is raised.
-        # Realism & increased stability! (Though narrow channels still can have
-        # deeper flows & steeper gradients)
-        
-        # sed_conc_diff_prop
-        return (sed_conc_center_prop - sed_conc_edge_prop)
+            # Had previously divided by "bi" to create the gradient, but this
+            # was forgetting my own work by hand! So much of the channel is
+            # unaffected by the walls (constant velocity and stress), such that
+            # the near-wall zone of substantital velocity and stress gradients
+            # has a separate and approximately constant width.
+            # Now, the only width feedback will be the related to the powers
+            # to which the stress gradient is raised.
+            # Realism & increased stability! (Though narrow channels still can have
+            # deeper flows & steeper gradients)
+            
+            # sed_conc_diff_prop
+            return (sed_conc_center_prop - sed_conc_edge_prop)
 
+        else:
+            # u_star_banks up to h_banks, and then u_star_bed beyond
+            # Could simplify
+            return ( 1 - (1/(1+self.Parker_epsilon))**(7/4.) ) \
+                    * (self.g * self.h_banks * self.S)**(3.5/2.) \
+
+        # (later)
         # Concentration gradient calcualted over min(h, h_beta):
         # This sets distance from banks over which side-wall drag is important
+
 
 
     def sed_conc_diff__bed_load(self):
