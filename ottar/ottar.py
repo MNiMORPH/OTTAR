@@ -18,7 +18,7 @@ class RiverWidth(object):
         # Starting values (None) -- D in this too, but set in inputs
         self.channel_n = None
         self.tau_crit_sed = None
-        self.u_star_crit_sed = None
+        #self.u_star_crit_sed = None
         
         # Input variables
         self.h_banks = h_banks
@@ -249,6 +249,12 @@ class RiverWidth(object):
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def narrow_bed_load(self, recompute_utk=False):
+        # Requires grain size for both concentration difference
+        # (handled elsewhere: becomes 0 if D not set)
+        # and for thickness of layer in motion
+        # No bed-load narrowing if not a system with bed load
+        if self.D is None:
+            return 0
         if recompute_utk == True:
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * h * self.u_star_bed
@@ -261,6 +267,9 @@ class RiverWidth(object):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
+        if self.D is not None:
+            self.tau_star_bed = self.tau_bed / \
+                            ( (self.rho_s - self.rho)**.5 * self.g * self.D )
 
     def narrow(self):
         """
@@ -402,10 +411,10 @@ class RiverWidth(object):
     def sed_conc_diff__bed_load(self):
         #print("BEDLOAD")
         # Early exit if no grain size specified: no bed load desired
-        if self.D is None:
+        if self.D is None or self.tau_star_crit_sed is None:
             return 0
         # Sediment concentrations / exit early if no change needed
-        if self.u_star_bed < self.u_star_crit_sed:
+        if self.tau_star_bed < self.tau_star_crit_sed:
             # If no sediment transport, no narrowing
             return 0
         # Otherwise, continuing
@@ -417,11 +426,11 @@ class RiverWidth(object):
         # Similarly I posit, u* **2 --> concentration
         #                    u*     --> velocity
         # for u* **3 total in relationship (w/ critical stress, of course)
-        sed_conc_center_prop = (self.u_star_bed - self.u_star_crit_sed)**2
-        if self.u_star_bank < self.u_star_crit_sed:
+        sed_conc_center_prop = (self.tau_star_bed - self.tau_star_crit_sed)**2
+        if self.u_star_bank < self.tau_star_crit_sed:
             sed_conc_edge_prop = 0.
         else:
-            sed_conc_edge_prop = (self.u_star_bank - self.u_star_crit_sed)**2
+            sed_conc_edge_prop = (self.tau_star_bank - self.tau_star_crit_sed)**2
                 
         # sed_conc_diff_prop
         return (sed_conc_center_prop - sed_conc_edge_prop)
