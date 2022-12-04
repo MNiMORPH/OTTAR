@@ -242,9 +242,8 @@ class RiverWidth(object):
         if recompute_utkh == True:
             self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * h * self.u_star_bed
-            self.h_against_banks =  min( self.h, self.h_banks )
         # Narrowing
-        qsy = self.f_stickiness * self.K_Ey * self.h_against_banks * \
+        qsy = self.f_stickiness * self.K_Ey * \
                 self.sed_conc_diff__suspended_load()
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
