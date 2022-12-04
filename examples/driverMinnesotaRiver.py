@@ -21,12 +21,15 @@ streamflowData['Timestamp'] = streamflowData['Timestamp'].astype('datetime64[ns]
 streamflowData = streamflowData.sort_values('Timestamp')
 
 rw = ottar.RiverWidth(h_banks=6., S=1E-4, tau_crit=5, k_d=2E-6, k_E=0.4,
-                                b0=65., f_stickiness=1E-3,
-                                k_n_noncohesive=1E-2, D=0.0005
+                                b0=65., f_stickiness=1E-2,
+                                k_n_noncohesive=2E-5, D=0.0005
                                 )
 
 t = streamflowData['Timestamp']
 Q = streamflowData['Discharge (cfs)'] * cfs_to_m3s
+
+#t = streamflowData['Timestamp'][:4000]
+#Q = streamflowData['Discharge (cfs)'][:4000] * cfs_to_m3s
 
 rw.initialize_flow_calculations(0.031, 180., 1.5)
 
