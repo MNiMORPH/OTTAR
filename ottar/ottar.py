@@ -279,11 +279,11 @@ class RiverWidth(object):
         Result is the sum of supended-load and bed-load processes
         """
 
-        self.h_against_banks =  min( self.h, self.h_banks )
-        if self.h_against_banks < 0:
-            print("ERROR: Channel width < -0!")
-            raise ValueError('Negative flow depth given: Nonphysical.')            
-        elif self.h_against_banks == 0:
+        if self.bi < 0:
+            print("ERROR: Channel width < 0!")
+            self.bi = 0
+            #raise ValueError('Negative flow depth given: Nonphysical.')            
+        if self.h == 0:
             # No water in channel (!)
             print("Note: No water in channel.")
             self.db_narrowing = 0
