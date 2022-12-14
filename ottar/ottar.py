@@ -282,7 +282,7 @@ class RiverWidth(object):
         if self.bi < 0:
             print("ERROR: Channel width < 0!")
             self.bi = 0
-            #raise ValueError('Negative flow depth given: Nonphysical.')            
+            raise ValueError('Negative flow depth given: Nonphysical.')            
         if self.h == 0:
             # No water in channel (!)
             print("Note: No water in channel.")
@@ -593,7 +593,7 @@ class RiverWidth(object):
         plt.tight_layout()
         plt.show()
         
-    def plotQb(self):
+    def plotQb(self, tdata=None, bdata=None):
         """
         Plot channel width and river discharge over time
         """
@@ -606,6 +606,8 @@ class RiverWidth(object):
         ax2 = plt.subplot(2,1,2)
         ax1.plot(_t, self.b, 'k-', linewidth=2)
         ax1.set_ylabel('Channel width [m]', fontsize=16)
+        if tdata is not None and bdata is not None:
+            ax1.plot(tdata, bdata, 'o', color='0.5')
         ax2.plot(_t, self.Q)
         ax2.set_ylabel('Discharge [m$^3$ s$^{-1}$]', fontsize=16)
         if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
