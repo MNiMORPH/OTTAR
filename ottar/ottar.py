@@ -455,6 +455,9 @@ class RiverWidth(object):
         bi_outer = self.b[-1]
         self.hclass.set_b( bi_outer )
         h = self.hclass.compute_depth( Qi )
+        # Use depth, not hydraulic radius, because the Parker_eposilon
+        # factor is intended to convert the channel-centerline stress 
+        # into a near-bank stress.
         self.tau_bank = self.rho * self.g * h * self.S / (1 + self.Parker_epsilon)
         # Record tau_bank in its series
         # Record narrowing rate
