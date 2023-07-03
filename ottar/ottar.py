@@ -248,18 +248,28 @@ class RiverWidth(object):
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def narrow_bed_load(self, recompute_utk=False):
-        # Requires grain size for both concentration difference
-        # (handled elsewhere: becomes 0 if D not set)
-        # and for thickness of layer in motion
-        # No bed-load narrowing if not a system with bed load
+        """
+        Lateral sediment velocity is proportional to downstream sediment
+        velocity. This equation gives the bank-ward depth-integrated flux
+        and then rescales it to bank lateral position change
+        """
         if self.D is None:
+            return 0
+        if self.tau_star_bed < self.tau_star_crit_sed:
             return 0
         if recompute_utk == True:
             self.compute__u_star__tau_bed()
+            # Recomputes the erosional efficiency because of its
+            # dependency
             self.K_Ey = 0.13 * h * self.u_star_bed
         # Narrowing
-        qsy = self.k_n_noncohesive * self.K_Ey * self.D * \
-                self.sed_conc_diff__bed_load()
+        # qsby = u_{s,b}/8 * 3.6 (tau*_b-tau^*_c) * (2/3)D
+        print(self.tau_star_bed - self.tau_star_crit_sed)
+        #print(self.u_star_bed - self.u_star_crit_sed)
+        usx = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
+                    + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
+                        * self.g**.5 * self.D**.5
+        qsy = 0.3 * usx * (self.tau_star_bed - self.tau_star_crit_sed) * self.D
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
@@ -415,36 +425,6 @@ class RiverWidth(object):
         # (later)
         # Concentration gradient calcualted over min(h, h_beta):
         # This sets distance from banks over which side-wall drag is important
-
-
-
-    def sed_conc_diff__bed_load(self):
-        #print("BEDLOAD")
-        # Early exit if no grain size specified: no bed load desired
-        if self.D is None or self.tau_star_crit_sed is None:
-            return 0
-        # Sediment concentrations / exit early if no change needed
-        if self.tau_star_bed < self.tau_star_crit_sed:
-            # If no sediment transport, no narrowing
-            return 0
-        # Otherwise, continuing
-        # Radice: primarily concentration difference, with velocity
-        # approximately constant.
-        # Suspended sediment: 1x u* for velocity, and the rest for
-        # concentration (then integrate over depth if qs desired)
-        # (which it isn't, here)
-        # Similarly I posit, u* **2 --> concentration
-        #                    u*     --> velocity
-        # for u* **3 total in relationship (w/ critical stress, of course)
-        sed_conc_center_prop = (self.tau_star_bed - self.tau_star_crit_sed)**2
-        if self.u_star_bank < self.tau_star_crit_sed:
-            sed_conc_edge_prop = 0.
-        else:
-            sed_conc_edge_prop = (self.tau_star_bank - self.tau_star_crit_sed)**2
-                
-        # sed_conc_diff_prop
-        return (sed_conc_center_prop - sed_conc_edge_prop)
-
 
     def update(self, dt, Qi, max_fract_to_equilib=0.1):
         """
@@ -788,6 +768,12 @@ class FlowDepthDoubleManning( object ):
         self.Q = _var
 
     def flow_depth_from_Manning_discharge( self, h ):
+        # 2023.05.01
+        # Compute hydraulic radius -- depends on whether or not flow goes overbank
+        # Should I do this or is this too much w/ rectangular-channel assumption anyway
+        # REVISIT
+        
+        # Does the flow go overbank?
         ob = h > self.h_bank
         return self.b/self.n * h**(5/3.) * self.S**0.5 \
                   + ob*self.k*(h-self.h_bank)**(ob*self.P) - self.Q
