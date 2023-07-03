@@ -220,16 +220,36 @@ class RiverWidth(object):
             # not being used) intermittency
             # Note: Porosity here but not in cohesive case (via convention
             # of empirical shear--detachment rule used there)
+            
+            # Overall general form (h<=h_banks):
+            # 3.6 K h/h_banks (tau*-tau*_c) D/t_flight
+            # 3.6 --> pi/4 * 4.6: coefficient for bed-sediment concentration
+            # K --> coefficient; how many hops down bank? unconsidered terms?
+            # h/h_banks --> length of erosion compared to total length to erode
+            # D --> Erosional distance scale from one grain being removed
+            # t_flight --> Length of time in transport; scales relationship
+            #              between concentration and detachment rate
+            #              (longer flight time --> lower detachment rate
+            #              required to attain concentration)
+
+            # WHAT TO DO IF CONC > 1?
+            
+            t_flight = 10.6 * self.D / (
+                                ((self.rho_s - self.rho)/self.rho)
+                                * self.g
+                                )**.5
             if self.h < self.h_banks:
-                db_widening = 2 * self.k_E * self.h/self.h_banks \
+                db_widening = 2 * 3.6 * self.k_E * self.h/self.h_banks \
                            * ( self.tau_star_bank - self.tau_star_crit_sed ) \
                            * self.D \
+                           / t_flight \
                            * self.dt * self.intermittency \
                            / (1 - self.porosity)
             else:
-                db_widening = 2 * self.k_E \
+                db_widening = 2 * 3.6 * self.k_E \
                            * ( self.tau_star_bank - self.tau_star_crit_sed ) \
                            * self.D \
+                           / t_flight \
                            * self.dt * self.intermittency \
                            / (1 - self.porosity)
         # Otherwise, no erosion
