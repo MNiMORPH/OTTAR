@@ -145,8 +145,9 @@ class RiverWidth(object):
         # That is, unless D is not set, in which case, a fully cohesive system
         # is assumed
         
-        # If not specified to evolve via bedload
-        if self.D is None:
+        # If not specified to evolve via bed load:
+        # No grain size and/or no erosional coefficient
+        if (self.D is None) or (self.k_E is None):
             self.db_widening = self.widen_cohesive()
             self.db_widening_cohesive_control.append( True )
         # Else if not specified to evolve via suspended load
@@ -207,9 +208,6 @@ class RiverWidth(object):
         self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
                                                 self.g * self.D )
 
-        if self.k_E is None:
-            # If there is no erosional coefficient, there is no erosion.
-            return 0
         if self.tau_star_bank > self.tau_star_crit_sed:
             # We assume the bank shape of Parker (1978), which is plausible
             # and allows the entire bank region to experience
