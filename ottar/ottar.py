@@ -264,12 +264,21 @@ class RiverWidth(object):
             self.K_Ey = 0.13 * h * self.u_star_bed
         # Narrowing
         # qsby = u_{s,b}/8 * 3.6 (tau*_b-tau^*_c) * (2/3)D
-        print(self.tau_star_bed - self.tau_star_crit_sed)
+        #print(self.tau_star_bed - self.tau_star_crit_sed)
         #print(self.u_star_bed - self.u_star_crit_sed)
-        usx = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
+        usx_ch = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
                     + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                         * self.g**.5 * self.D**.5
-        qsy = 0.3 * usx * (self.tau_star_bed - self.tau_star_crit_sed) * self.D
+        qsy_ch = 0.3 * usx_ch * (self.tau_star_bed - self.tau_star_crit_sed) * self.D
+        if self.u_star_bank - self.u_star_crit_sed:
+            usx_b = 0
+            qsy_b = 0
+        else:
+            usx_b = 4.4 * (self.u_star_bank - self.u_star_crit_sed) \
+                        + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
+                            * self.g**.5 * self.D**.5
+            qsy_b = 0.3 * usx_b * (self.tau_star_bank - self.tau_star_crit_sed) * self.D
+        qsy = qsy_ch - qsy_b       
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
