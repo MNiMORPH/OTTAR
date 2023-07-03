@@ -300,7 +300,7 @@ class RiverWidth(object):
                 * self.g**0.5 * self.D**3.5
         self.usx_ch = usx_ch
         self.f_Am_ch = f_Am_ch
-        print(qsy_ch, mpm)
+        #print(qsy_ch, mpm)
         if self.u_star_bank < self.u_star_crit_sed:
             usx_b = 0
             qsy_b = 0
