@@ -207,6 +207,9 @@ class RiverWidth(object):
         self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
                                                 self.g * self.D )
 
+        if self.k_E is None:
+            # If there is no erosional coefficient, there is no erosion.
+            return 0
         if self.tau_star_bank > self.tau_star_crit_sed:
             # We assume the bank shape of Parker (1978), which is plausible
             # and allows the entire bank region to experience
