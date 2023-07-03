@@ -611,11 +611,17 @@ class RiverWidth(object):
         """
         Plot channel width over time
         """
+        # Manage typing of time stamp for plotting
+        # Required with newer Pandas
+        if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
+            _t = self.t
+        else:
+            _t = list(np.array(self.t)/86400.)
         #b_eq = self.get_equilibriumWidth(self.Qi)
         plt.figure()
         #plt.hlines(b_eq, self.t[0], self.t[-1]/86400.,
         #           '.5', label='Equilibrium width', linewidth=2)
-        plt.plot(self.t/86400., self.b, 'k-', label='Transient width',
+        plt.plot(_t, self.b, 'k-', label='Transient width',
                  linewidth=2)
         plt.xlabel('Time [days of flood]')
         plt.ylabel('Channel width [m]')
