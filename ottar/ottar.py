@@ -253,6 +253,8 @@ class RiverWidth(object):
         velocity. This equation gives the bank-ward depth-integrated flux
         and then rescales it to bank lateral position change
         """
+        # !!!!!!!!!! FIND AND ADDRESS SOURCE OF DISCREPANCY TO MPM
+        # !!!!!!!!!! OR AT LEAST: FORMAL CURVE FIT
         if recompute_utk == True:
             self.compute__u_star__tau_bed()
         if self.D is None:
