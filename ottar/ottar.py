@@ -253,6 +253,8 @@ class RiverWidth(object):
         velocity. This equation gives the bank-ward depth-integrated flux
         and then rescales it to bank lateral position change
         """
+        self.compute__u_star__tau_bed()
+        print(self.tau_star_bed)
         if self.D is None:
             return 0
         if self.tau_star_bed < self.tau_star_crit_sed:
@@ -269,15 +271,18 @@ class RiverWidth(object):
         usx_ch = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
                     + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                         * self.g**.5 * self.D**.5
-        qsy_ch = 0.3 * usx_ch * (self.tau_star_bed - self.tau_star_crit_sed) * self.D
-        if self.u_star_bank - self.u_star_crit_sed:
+        f_Am_ch = np.min( ( 3.6 * (self.tau_star_bed - self.tau_star_crit_sed), 1.))
+        qsy_ch = usx_ch/8. * f_Am_ch * 2/3.*self.D
+        if self.u_star_bank < self.u_star_crit_sed:
             usx_b = 0
             qsy_b = 0
         else:
             usx_b = 4.4 * (self.u_star_bank - self.u_star_crit_sed) \
                         + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                             * self.g**.5 * self.D**.5
-            qsy_b = 0.3 * usx_b * (self.tau_star_bank - self.tau_star_crit_sed) * self.D
+            # !!!!!!!!!!!!!!! TAU STAR BANK FIX LATER. ADD TO COMPUTE?
+            f_Am_b = np.min( ( 3.6 * (self.tau_star_bed/1.2 - self.tau_star_crit_sed), 1.))
+            qsy_b = usx_b/8. * f_Am_b * 2/3.*self.D
         qsy = qsy_ch - qsy_b       
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
