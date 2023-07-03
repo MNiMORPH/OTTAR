@@ -241,7 +241,7 @@ class RiverWidth(object):
     def narrow_suspended_load(self, recompute_utkh=False):
         if recompute_utkh == True:
             self.compute__u_star__tau_bed()
-            self.K_Ey = 0.13 * h * self.u_star_bed
+            self.K_Ey = 0.13 * self.h * self.u_star_bed
         # Narrowing -- flipped sign convention of conc diff (so no $-$ needed)
         qsy = self.f_stickiness * self.K_Ey * \
                 self.sed_conc_diff__suspended_load()
@@ -261,7 +261,7 @@ class RiverWidth(object):
             self.compute__u_star__tau_bed()
             # Recomputes the erosional efficiency because of its
             # dependency
-            self.K_Ey = 0.13 * h * self.u_star_bed
+            self.K_Ey = 0.13 * self.h * self.u_star_bed
         # Narrowing
         # qsby = u_{s,b}/8 * 3.6 (tau*_b-tau^*_c) * (2/3)D
         #print(self.tau_star_bed - self.tau_star_crit_sed)
