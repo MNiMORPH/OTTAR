@@ -253,17 +253,12 @@ class RiverWidth(object):
         velocity. This equation gives the bank-ward depth-integrated flux
         and then rescales it to bank lateral position change
         """
-        self.compute__u_star__tau_bed()
-        print(self.tau_star_bed)
+        if recompute_utk == True:
+            self.compute__u_star__tau_bed()
         if self.D is None:
             return 0
         if self.tau_star_bed < self.tau_star_crit_sed:
             return 0
-        if recompute_utk == True:
-            self.compute__u_star__tau_bed()
-            # Recomputes the erosional efficiency because of its
-            # dependency
-            self.K_Ey = 0.13 * self.h * self.u_star_bed
         # Narrowing
         # qsby = u_{s,b}/8 * 3.6 (tau*_b-tau^*_c) * (2/3)D
         #print(self.tau_star_bed - self.tau_star_crit_sed)
@@ -271,8 +266,18 @@ class RiverWidth(object):
         usx_ch = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
                     + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                         * self.g**.5 * self.D**.5
+        usx_ch = 4.4*0.003 * (self.u_star_bed - self.u_star_crit_sed) \
+                        + 0.11E-3 * ((self.rho_s - self.rho)/self.rho)**.5 \
+                            * self.g**.5 * self.D**.5
         f_Am_ch = np.min( ( 3.6 * (self.tau_star_bed - self.tau_star_crit_sed), 1.))
         qsy_ch = usx_ch/8. * f_Am_ch * 2/3.*self.D
+        self.qsy_ch = qsy_ch
+        mpm = 3.97 * (self.tau_star_bed - self.tau_star_crit_sed)**1.5 \
+                * ((self.rho_s-self.rho)/self.rho)**0.5 \
+                * self.g**0.5 * self.D**3.5
+        self.usx_ch = usx_ch
+        self.f_Am_ch = f_Am_ch
+        print(qsy_ch, mpm)
         if self.u_star_bank < self.u_star_crit_sed:
             usx_b = 0
             qsy_b = 0
@@ -281,10 +286,13 @@ class RiverWidth(object):
                         + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                             * self.g**.5 * self.D**.5
             # !!!!!!!!!!!!!!! TAU STAR BANK FIX LATER. ADD TO COMPUTE?
+            usx_b = 4.4*0.003 * (self.u_star_bank - self.u_star_crit_sed) \
+                        + 0.11E-3 * ((self.rho_s - self.rho)/self.rho)**.5 \
+                            * self.g**.5 * self.D**.5
             f_Am_b = np.min( ( 3.6 * (self.tau_star_bed/1.2 - self.tau_star_crit_sed), 1.))
             qsy_b = usx_b/8. * f_Am_b * 2/3.*self.D
         qsy = qsy_ch - qsy_b       
-        return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
+        return 0.1*2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
