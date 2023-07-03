@@ -56,7 +56,7 @@ class RiverWidth(object):
         if self.D is not None:
             self.tau_crit_sed = self.tau_star_crit_sed * \
                                   ( (self.rho_s - self.rho) * self.g * self.D)
-            self.u_star_crit_sed = (self.tau_crit_sed / self.rho)**.5
+            self.u_star_crit_sed = (self.tau_star_crit_sed / self.rho)**.5
 
         # Derived: Equilibrium width set by cohesion or grain size
         if self.tau_crit_sed is None:
