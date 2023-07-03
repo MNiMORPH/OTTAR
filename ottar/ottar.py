@@ -292,7 +292,7 @@ class RiverWidth(object):
         self.u_star_bed = (self.tau_bed / self.rho)**.5
         if self.D is not None:
             self.tau_star_bed = self.tau_bed / \
-                            ( (self.rho_s - self.rho)**.5 * self.g * self.D )
+                            ( (self.rho_s - self.rho) * self.g * self.D )
 
     def narrow(self):
         """
