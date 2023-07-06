@@ -274,8 +274,6 @@ class RiverWidth(object):
         velocity. This equation gives the bank-ward depth-integrated flux
         and then rescales it to bank lateral position change
         """
-        # !!!!!!!!!! FIND AND ADDRESS SOURCE OF DISCREPANCY TO MPM
-        # !!!!!!!!!! OR AT LEAST: FORMAL CURVE FIT
         if recompute_utk == True:
             self.compute__u_star__tau_bed()
         if self.D is None:
@@ -283,51 +281,39 @@ class RiverWidth(object):
         if self.tau_star_bed < self.tau_star_crit_sed:
             return 0
         # Narrowing
-        # qsby = u_{s,b}/8 * 3.6 (tau*_b-tau^*_c) * (2/3)D
-        #print(self.tau_star_bed - self.tau_star_crit_sed)
-        #print(self.u_star_bed - self.u_star_crit_sed)
+        # Overall: bankward - channel-ward
+        # qsby = u_{s,b}/4 * 3.6 (tau*_b-tau^*_c)/2 * (2/3)D
+        # Channel to bank
         usx_ch = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
                     + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
-                        * self.g**.5 * self.D**.5
-        """
-        # Check: same answer
-        usx_ch = 4.4 * \
-                    ((self.rho_s - self.rho)/self.rho)**.5 \
-                    * self.g**.5 * self.D**.5 \
-                    * (self.tau_star_bed**.5 - self.tau_star_crit_sed**.5 
-                      + 0.025)
-        """
-        """
-        # Has correction factor that is based on a mistake of mine
-        usx_ch = 4.4*0.003 * (self.u_star_bed - self.u_star_crit_sed) \
-                        + 0.11E-3 * ((self.rho_s - self.rho)/self.rho)**.5 \
-                            * self.g**.5 * self.D**.5
-        """
-        f_Am_ch = np.min( ( 3.6 * (self.tau_star_bed - self.tau_star_crit_sed), 1.))
+                    * self.g**.5 * self.D**.5
+        f_Am_ch = np.min( 
+                    ( 3.6 * (self.tau_star_bed - self.tau_star_crit_sed),
+                    1.) )
         # f_Am_ch/2. is because half of the sediment goes in each direction
         qsy_ch = usx_ch/4. * f_Am_ch/2. * 2/3.*self.D
-        self.qsy_ch = qsy_ch
+        # Bank to channel
+        if self.u_star_bank < self.u_star_crit_sed:
+            qsy_bank = 0
+        else:
+            usx_bank = 4.4 * (self.u_star_bank - self.u_star_crit_sed) \
+                        + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
+                        * self.g**.5 * self.D**.5
+            f_Am_bank = np.min( 
+                            ( 3.6 * (self.tau_star_bank - self.tau_star_crit_sed),
+                            1.) )
+            qsy_bank = usx_bank/4. * f_Am_bank/2. * 2/3.*self.D
+        # Just for comparison; delete later!!!!!!!        
         mpm = 3.97 * (self.tau_star_bed - self.tau_star_crit_sed)**1.5 \
                 * ((self.rho_s-self.rho)/self.rho)**0.5 \
                 * self.g**0.5 * self.D**1.5
-        self.usx_ch = usx_ch
-        self.f_Am_ch = f_Am_ch
-        #print(qsy_ch, mpm)
-        if self.u_star_bank < self.u_star_crit_sed:
-            usx_b = 0
-            qsy_b = 0
-        else:
-            usx_b = 4.4 * (self.u_star_bank - self.u_star_crit_sed) \
-                        + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
-                            * self.g**.5 * self.D**.5
-            # !!!!!!!!!!!!!!! TAU STAR BANK FIX LATER. ADD TO COMPUTE?
-            usx_b = 4.4*0.003 * (self.u_star_bank - self.u_star_crit_sed) \
-                        + 0.11E-3 * ((self.rho_s - self.rho)/self.rho)**.5 \
-                            * self.g**.5 * self.D**.5
-            f_Am_b = np.min( ( 3.6 * (self.tau_star_bed/1.2 - self.tau_star_crit_sed), 1.))
-            qsy_b = usx_b/8. * f_Am_b * 2/3.*self.D
-        qsy = qsy_ch - qsy_b       
-        return 0.1*2*qsy*self.dt / ( (1-self.poros\ity) * self.h_banks )
+        # Together, net bankward transport
+        qsy = qsy_ch - qsy_bank
+        # Return effect on banks.
+        # Multiplied by two: Both sides
+        # Amplified by porosity in banks
+        # Reduced by bank height (conversion to lateral rate of motion)
+        return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
