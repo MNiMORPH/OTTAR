@@ -13,7 +13,7 @@ class RiverWidth(object):
     def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, k_E=None,
                        f_stickiness=0., k_n_noncohesive=0.,
                        Parker_epsilon=0.2, intermittency=1.,
-                       D=None):
+                       D=None, tau_star_crit_sed=0.0495):
 
         # Starting values (None) -- D in this too, but set in inputs
         self.channel_n = None
@@ -48,7 +48,7 @@ class RiverWidth(object):
         self.rho = 1000.
         self.porosity = 0.35
         # For sediment (used in bed load calculations)
-        self.tau_star_crit_sed = 0.0495 # Wong & Parker (2006): sediment grains
+        self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
         self.rho_s = 2650. # Quartz assumed
         self.SECONDS_IN_DAY = 86400
 
