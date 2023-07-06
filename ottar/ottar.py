@@ -289,15 +289,27 @@ class RiverWidth(object):
         usx_ch = 4.4 * (self.u_star_bed - self.u_star_crit_sed) \
                     + 0.11 * ((self.rho_s - self.rho)/self.rho)**.5 \
                         * self.g**.5 * self.D**.5
+        """
+        # Check: same answer
+        usx_ch = 4.4 * \
+                    ((self.rho_s - self.rho)/self.rho)**.5 \
+                    * self.g**.5 * self.D**.5 \
+                    * (self.tau_star_bed**.5 - self.tau_star_crit_sed**.5 
+                      + 0.025)
+        """
+        """
+        # Has correction factor that is based on a mistake of mine
         usx_ch = 4.4*0.003 * (self.u_star_bed - self.u_star_crit_sed) \
                         + 0.11E-3 * ((self.rho_s - self.rho)/self.rho)**.5 \
                             * self.g**.5 * self.D**.5
+        """
         f_Am_ch = np.min( ( 3.6 * (self.tau_star_bed - self.tau_star_crit_sed), 1.))
-        qsy_ch = usx_ch/8. * f_Am_ch * 2/3.*self.D
+        # f_Am_ch/2. is because half of the sediment goes in each direction
+        qsy_ch = usx_ch/4. * f_Am_ch/2. * 2/3.*self.D
         self.qsy_ch = qsy_ch
         mpm = 3.97 * (self.tau_star_bed - self.tau_star_crit_sed)**1.5 \
                 * ((self.rho_s-self.rho)/self.rho)**0.5 \
-                * self.g**0.5 * self.D**3.5
+                * self.g**0.5 * self.D**1.5
         self.usx_ch = usx_ch
         self.f_Am_ch = f_Am_ch
         #print(qsy_ch, mpm)
@@ -315,7 +327,7 @@ class RiverWidth(object):
             f_Am_b = np.min( ( 3.6 * (self.tau_star_bed/1.2 - self.tau_star_crit_sed), 1.))
             qsy_b = usx_b/8. * f_Am_b * 2/3.*self.D
         qsy = qsy_ch - qsy_b       
-        return 0.1*2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
+        return 0.1*2*qsy*self.dt / ( (1-self.poros\ity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
