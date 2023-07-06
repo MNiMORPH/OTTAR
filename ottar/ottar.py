@@ -235,10 +235,9 @@ class RiverWidth(object):
 
             # WHAT TO DO IF CONC > 1?
             
-            t_flight = 10.6 * self.D / (
-                                ((self.rho_s - self.rho)/self.rho)
-                                * self.g
-                                )**.5
+            t_flight = 10.6 * (self.D / 
+                                ( (self.rho_s - self.rho)/self.rho)
+                                * self.g )**.5
             if self.h < self.h_banks:
                 db_widening = 2 * 3.6 * self.k_E * self.h/self.h_banks \
                            * ( self.tau_star_bank - self.tau_star_crit_sed ) \
