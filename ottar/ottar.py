@@ -313,7 +313,8 @@ class RiverWidth(object):
         # Multiplied by two: Both sides
         # Amplified by porosity in banks
         # Reduced by bank height (conversion to lateral rate of motion)
-        return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
+        return self.k_n_noncohesive \
+                  *2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
     def compute__u_star__tau_bed(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
