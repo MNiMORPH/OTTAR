@@ -203,10 +203,6 @@ class RiverWidth(object):
         All entrained sediment tumbles to the channel bed, where tau* is
         higher and the sediment is transported away.
         """
-        #print("Noncohesive_control")
-        # Tau*
-        self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
-                                                self.g * self.D )
 
         if self.tau_star_bank > self.tau_star_crit_sed:
             # We assume the bank shape of Parker (1978), which is plausible
@@ -317,6 +313,8 @@ class RiverWidth(object):
 
     def compute__u_star__tau_bed(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
+        self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
+                                                self.g * self.D )
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
         if self.D is not None:
