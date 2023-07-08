@@ -304,8 +304,9 @@ class RiverWidth(object):
 
     def compute__u_star__tau__K_Ey(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
-        self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
-                                                self.g * self.D )
+        if self.D is not None:
+            self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
+                                                    self.g * self.D )
         self.tau_bed = self.tau_bank * (1 + self.Parker_epsilon)
         self.u_star_bed = (self.tau_bed / self.rho)**.5
         if self.D is not None:
