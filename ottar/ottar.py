@@ -293,10 +293,6 @@ class RiverWidth(object):
                             ( 3.6 * (self.tau_star_bank - self.tau_star_crit_sed),
                             1.) )
             qsy_bank = usx_bank/4. * f_Am_bank/2. * 2/3.*self.D
-        # Just for comparison; delete later!!!!!!!        
-        #mpm = 3.97 * (self.tau_star_bed - self.tau_star_crit_sed)**1.5 \
-        #        * ((self.rho_s-self.rho)/self.rho)**0.5 \
-        #        * self.g**0.5 * self.D**1.5
         # Together, net bankward transport
         qsy = qsy_ch - qsy_bank
         # Return effect on banks.
