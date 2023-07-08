@@ -254,23 +254,18 @@ class RiverWidth(object):
 
         return db_widening
         
-    def narrow_suspended_load(self, recompute_utkh=False):
-        if recompute_utkh == True:
-            self.compute__u_star__tau_bed()
-            self.K_Ey = 0.13 * self.h * self.u_star_bed
+    def narrow_suspended_load(self):
         # Narrowing -- flipped sign convention of conc diff (so no $-$ needed)
         qsy = self.f_stickiness * self.K_Ey * \
                 self.sed_conc_diff__suspended_load()
         return 2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
-    def narrow_bed_load(self, recompute_utk=False):
+    def narrow_bed_load(self):
         """
         Lateral sediment velocity is proportional to downstream sediment
         velocity. This equation gives the bank-ward depth-integrated flux
         and then rescales it to bank lateral position change
         """
-        if recompute_utk == True:
-            self.compute__u_star__tau_bed()
         if self.D is None:
             return 0
         if self.tau_star_bed < self.tau_star_crit_sed:
@@ -311,7 +306,7 @@ class RiverWidth(object):
         return self.k_n_noncohesive \
                   *2*qsy*self.dt / ( (1-self.porosity) * self.h_banks )
 
-    def compute__u_star__tau_bed(self):
+    def compute__u_star__tau__K_Ey(self):
         self.u_star_bank = (self.tau_bank / self.rho)**.5
         self.tau_star_bank = self.tau_bank / ( (self.rho_s - self.rho) *
                                                 self.g * self.D )
@@ -320,6 +315,7 @@ class RiverWidth(object):
         if self.D is not None:
             self.tau_star_bed = self.tau_bed / \
                             ( (self.rho_s - self.rho) * self.g * self.D )
+        self.K_Ey = 0.13 * self.h * self.u_star_bed
 
     def narrow(self):
         """
@@ -352,7 +348,6 @@ class RiverWidth(object):
             # K_Ey Should also scale with lateral velocity variability that
             # moves bedload from side to side
             # This could be good to revisit experimentally
-            self.compute__u_star__tau_bed()
             self.K_Ey = 0.13 * self.h * self.u_star_bed
 
             # Noncohesive (bed load) + cohesive (suspended load)
@@ -526,6 +521,8 @@ class RiverWidth(object):
         self.tau_bank = self.rho * self.g * h * self.S \
                 / (1 + self.Parker_epsilon)
         self.h = h # For the widening, at least for now
+        # Update variables needed for computations
+        self.compute__u_star__tau__K_Ey()
         # Compute widening
         self.widen()
         #self.b.append(self.bi + self.db_widening)
