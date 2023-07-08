@@ -640,7 +640,7 @@ class RiverWidth(object):
         plt.tight_layout()
         plt.show()
         
-    def plotWideningNarrowingStress(self):
+    def plotWideningNarrowingStress(self, legend_loc=None):
         """
         Plot rates of widening and narrowing alongside bank stress
         """
@@ -653,7 +653,7 @@ class RiverWidth(object):
         ax2 = plt.subplot(2,1,2)
         ax1.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
         ax1.plot(_t, -self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
-        ax1.legend()
+        ax1.legend(loc=legend_loc, fontsize=12)
         ax1.set_ylabel('Channel width\nchange rate [m/day]', fontsize=16)
         ax2.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax2.set_ylabel('Bank shear stress [Pa]', fontsize=16)
@@ -664,7 +664,7 @@ class RiverWidth(object):
         plt.tight_layout()
         plt.show()
         
-    def plotWidthWideningNarrowingStress(self):
+    def plotWidthWideningNarrowingStress(self, legend_loc=None):
         """
         Plot width and rates of widening and narrowing alongside bank stress
         """
@@ -680,7 +680,7 @@ class RiverWidth(object):
         ax1.set_ylabel('Channel width [m]', fontsize=12)
         ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
         ax2.plot(_t, -self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
-        ax2.legend()
+        ax2.legend(loc=legend_loc, fontsize=12)
         ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
@@ -693,7 +693,7 @@ class RiverWidth(object):
         plt.tight_layout()
         plt.show()
         
-    def plotDischargeWidthWideningNarrowingStress(self):
+    def plotDischargeWidthWideningNarrowingStress(self, legend_loc=None):
         """
         Plot discharge, width, and rates of widening and narrowing alongside
         bank stress
@@ -713,7 +713,7 @@ class RiverWidth(object):
         ax1.set_ylabel('Channel width [m]', fontsize=12)
         ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
         ax2.plot(_t, -self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
-        ax2.legend()
+        ax2.legend(loc=legend_loc, fontsize=12)
         ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, self.tau_bank_series, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [self.tau_crit, self.tau_crit], '--', 
@@ -746,7 +746,7 @@ class RiverWidth(object):
         ax1.set_ylabel('Channel width [m]', fontsize=12)
         ax2.plot(_t, self.db_dt__day__widening_series, 'k-', linewidth=2, label='Widening')
         ax2.plot(_t, -self.db_dt__day__narrowing_series, '-', color='.5', linewidth=2, label='Narrowing')
-        ax2.legend(loc=legend_loc)
+        ax2.legend(loc=legend_loc, fontsize=12)
         ax2.set_ylabel('Channel width\nchange rate [m/day]', fontsize=12)
         ax3.plot(_t, np.array(self.tau_bank_series)/self.tau_crit_sed, 'k-', linewidth=2)
         ax3.plot( [_t[0], _t[-1]] , [1, 1], '--', 
