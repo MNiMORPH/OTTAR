@@ -813,11 +813,6 @@ class FlowDepthDoubleManning( object ):
         self.Q = _var
 
     def flow_depth_from_Manning_discharge( self, h ):
-        # 2023.05.01
-        # Compute hydraulic radius -- depends on whether or not flow goes overbank
-        # Should I do this or is this too much w/ rectangular-channel assumption anyway
-        # REVISIT
-        
         # Does the flow go overbank?
         ob = h > self.h_bank
         if self.use_Rh:
