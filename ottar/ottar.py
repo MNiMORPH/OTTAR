@@ -83,12 +83,12 @@ class RiverWidth(object):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize_flow_calculations(self, channel_n, fp_k, fp_P ):
+    def initialize_flow_calculations(self, channel_n, fp_k, fp_P, use_Rh ):
         """
         Hard-code for double Manning
         """
         self.channel_n = channel_n
-        self.hclass = FlowDepthDoubleManning()
+        self.hclass = FlowDepthDoubleManning(use_Rh)
         self.hclass.initialize( channel_n, fp_k, fp_P,
                                 self.h_banks, self.b[-1], self.S)
 
@@ -792,8 +792,9 @@ class FlowDepthDoubleManning( object ):
     Use Manning's equation to obtain flow depth from river discharge,
     using a conversion from ManningFit.py outputs
     """
-    def __init__(self):
-        pass
+    def __init__(self, use_Rh):
+        # Default to using hyraulic radius and not just depth
+        self.use_Rh = use_Rh
 
     def set_n(self, _var):
         self.n = _var
@@ -824,7 +825,11 @@ class FlowDepthDoubleManning( object ):
         
         # Does the flow go overbank?
         ob = h > self.h_bank
-        return self.b/self.n * h**(5/3.) * self.S**0.5 \
+        if self.use_Rh:
+            _r = h*self.b / (2*h + self.b)
+        else:
+            _r = h
+        return self.b/self.n * _r**(5/3.) * self.S**0.5 \
                   + ob*self.k*(h-self.h_bank)**(ob*self.P) - self.Q
 
     def compute_depth(self, Q=None):
@@ -859,3 +864,4 @@ class FlowDepthDoubleManning( object ):
 
     def finalize(self):
         pass
+
