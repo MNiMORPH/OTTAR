@@ -1,0 +1,47 @@
+# test_config.yml
+# Test configuration for OTTAR
+# A Wickert, 23 Oct 2022
+
+timeseries:
+        # STREAMFLOW FILE
+        # Columns:
+        #   - Date
+        #   - Discharge [m^3/s]
+        streamflow: 
+        # CHANNEL-WIDTH DATA FILE (optional)
+        # Columns
+        #   - Date
+        #   - Width [m]
+        widthdata: 
+
+morphology:
+        # Slope
+        S: 
+        # Bank height [m]
+        h_banks: 
+        # Initial width [m]
+        b_0: 
+        # Grain size [m]
+        D: 
+        # Gary Parker's excess-stress ratio
+        Parker_epsilon: 
+
+widening:
+        # Threshold for entrainment of noncohesive sediment (Shields stress)
+        tau_star_crit_sed: 0.0495
+        # Threshold for erosion of cohesive material [Pa]
+        tau_crit: 
+        # Noncohesive entrainment coefficient
+        k_E: 
+        # Cohesive detachment-rate coefficient
+        k_d: 
+        
+narrowing:
+        # Noncohesive trapping and holding efficiency coefficient
+        k_n_noncohesive:
+        # Cohesive "stickiness" factor
+        f_stickiness: 
+
+output:
+        # Save data to this file?
+        output_series: 
