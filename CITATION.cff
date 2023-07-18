@@ -5,7 +5,7 @@ authors:
   given-names: "Andrew D."
   orcid: "https://orcid.org/0000-0002-9545-3365"
 title: "OTTAR"
-version: 0.4.0
+version: 0.5.0
 doi: 10.5281/zenodo.5124965
 date-released: 2022-04-26
 url: "https://github.com/MNiMORPH/OTTAR"
