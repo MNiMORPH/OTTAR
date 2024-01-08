@@ -785,7 +785,7 @@ class FlowDepthDoubleManning( object ):
     Use Manning's equation to obtain flow depth from river discharge,
     using a conversion from ManningFit.py outputs
     """
-    def __init__(self, use_Rh):
+    def __init__(self, use_Rh=True):
         # Default to using hyraulic radius and not just depth
         self.use_Rh = use_Rh
 
