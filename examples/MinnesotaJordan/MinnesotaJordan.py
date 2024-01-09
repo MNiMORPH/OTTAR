@@ -31,7 +31,11 @@ Q = streamflowData['Discharge (cfs)'] * cfs_to_m3s
 #t = streamflowData['Timestamp'][:4000]
 #Q = streamflowData['Discharge (cfs)'][:4000] * cfs_to_m3s
 
-rw.initialize_flow_calculations(0.031, 180., 1.5)
+
+# DOES NOT WORK WITH NONZERO STAGE OFFSET!
+rw.initialize_flow_calculations( 0.031, 180., 1.5,
+                                  stage_offset=0., use_Rh=True )
+
 
 rw.initialize_timeseries(t, Q)
 rw.run()
