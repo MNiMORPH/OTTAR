@@ -52,6 +52,7 @@ doublemanning-flow:
         n_ch: 0.034
         k_fp: 138
         P_fp: 1.62
+        stage_offset: 
 
 output:
         # Save data to this file?

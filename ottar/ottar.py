@@ -159,6 +159,7 @@ class RiverWidth(object):
         #if self.yamlparams:
         self.channel_n = channel_n
         self.hclass = FlowDepthDoubleManning(use_Rh)
+        self.hclass.set_stage_offset(stage_offset)
         self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
