@@ -1,0 +1,59 @@
+# config.yaml
+# Example configuration for OTTAR: Minnesota River near Jordan
+# A Wickert, 08 Jan 2024
+
+timeseries:
+        # STREAMFLOW FILE
+        # Columns:
+        #   - Date
+        #   - Discharge [m^3/s]
+        streamflow: MN_Jordan_daily.csv
+        # CHANNEL-WIDTH DATA FILE (optional)
+        # Columns
+        #   - Date
+        #   - Width [m]
+        widthdata: 
+
+# These parameters are updated based on the "doublemanning" manuscript
+morphology:
+        # Slope
+        slope: 1E-4
+        # Bank height [m]
+        bank_height: 5.8
+        # Initial width [m]
+        initial_width: 65
+        # Gary Parker's excess-stress ratio
+        Parker_epsilon: 0.2
+
+sediment:
+        # Grain diameter [m]
+        grain_diameter: 0.25E-3
+        # Sediment density [kg/m^3]
+        sediment_density: 2650
+        
+widening:
+        # Threshold for entrainment of noncohesive sediment (Shields stress)
+        critical_shields_stress_of_noncohesive_sediment: 0.0495
+        # Threshold for erosion of cohesive material [Pa]
+        critical_detachment_shear_stress_for_cohesive_sediement: 5
+        # Noncohesive entrainment coefficient
+        noncohesive_entrainment_coefficient__k_E: 0.4
+        # Cohesive detachment-rate coefficient
+        coehsive_detachment_coefficient__k_d: 2E-6
+        
+narrowing:
+        # Noncohesive trapping and holding efficiency coefficient
+        trapping_and_holding_efficiency__k_n_noncohesive: 2E-5
+        # Cohesive "stickiness" factor
+        f_stickiness: 1E-2
+
+doublemanning-flow:
+        # These parameters are updated based on the "doublemanning" manuscript
+        n_ch: 0.034
+        k_fp: 138
+        P_fp: 1.62
+
+output:
+        # Save data to this file?
+        output_series: 
+        
