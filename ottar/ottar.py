@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import warnings
+import yaml
 
 class RiverWidth(object):
     """
@@ -50,9 +51,9 @@ class RiverWidth(object):
                     ['coehsive_detachment_coefficient__k_d']
             
             # narrowing
-            self.k_n_noncohesive = yamlparams['widening'] \
+            self.k_n_noncohesive = yamlparams['narrowing'] \
                     ['trapping_and_holding_efficiency__k_n_noncohesive']
-            self.f_stickiness = yamlparams['widening'] \
+            self.f_stickiness = yamlparams['narrowing'] \
                     ['f_stickiness']
             
             # doublemanning-flow
@@ -145,7 +146,7 @@ class RiverWidth(object):
         # Thanks to Eric Hutton for sharing this magic
         with open(filepath) as fp:
             config = yaml.safe_load(fp)
-        return cls(**config)
+        return cls(config)
 
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
@@ -159,7 +160,6 @@ class RiverWidth(object):
         #if self.yamlparams:
         self.channel_n = channel_n
         self.hclass = FlowDepthDoubleManning(use_Rh)
-        #self.hclass.set_stage_offset(stage_offset)
         self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
