@@ -2,17 +2,22 @@
 # Example configuration for OTTAR: Minnesota River near Jordan
 # A Wickert, 08 Jan 2024
 
-timeseries:
+streamflow:
         # STREAMFLOW FILE
-        # Columns:
+        # Column default names:
         #   - Date
         #   - Discharge [m^3/s]
-        streamflow: MN_Jordan_daily.csv
+        filename: MN_Jordan_daily.csv
+        datetime_column_name: Date
+        discharge_column_name: Discharge [m^3/s]
+widthdata: 
         # CHANNEL-WIDTH DATA FILE (optional)
-        # Columns
+        # Column default names:
         #   - Date
         #   - Width [m]
-        widthdata: 
+        filename: 
+        datetime_column_name: Date
+        discharge_column_name: Width [m]
 
 # These parameters are updated based on the "doublemanning" manuscript
 morphology:

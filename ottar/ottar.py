@@ -24,8 +24,22 @@ class RiverWidth(object):
             # Make it a class variable
             self.yamlparams = yamlparams
         
-            # timeseries
+            # streamflow
+            self.streamflow_filename = str( yamlparams['streamflow']
+                    ['filename'] )
+            self.streamflow_datetime_column_name = str( yamlparams['streamflow']
+                    ['datetime_column_name'] )
+            self.streamflow_discharge_column_name = str( yamlparams['streamflow']
+                    ['discharge_column_name'] )
             
+            # widthdata
+            # (optional, for comparison of model & data)
+            self.widthdata_filename = str( yamlparams['widthdata']
+                    ['filename'] )
+            self.widthdata_datetime_column_name = str( yamlparams['widthdata']
+                    ['datetime_column_name'] )
+            self.widthdata_discharge_column_name = str( yamlparams['widthdata']
+                    ['discharge_column_name'] )
             
             # morphology
             self.S = float( yamlparams['morphology']['slope'] )
@@ -64,6 +78,8 @@ class RiverWidth(object):
 
             # VARIABLES THAT ARE NOT SET
             self.intermittency = 1. # I might just remove this; save confusion
+            
+            
             
             
         else:
@@ -140,7 +156,7 @@ class RiverWidth(object):
         # And a series for the shear stress on the banks
         # (Equals 1/(1+self.Parker_epsilon) * bed shear stress)
         self.tau_bank_series = [np.nan]
-
+        
     @classmethod
     def from_yaml(cls, filepath):
         # "cls" is the class itself!
@@ -152,6 +168,15 @@ class RiverWidth(object):
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
+
+    def initialize(self):
+        """
+        Using the YAML params file:
+        * set up flow calculations
+        * import time-series data
+        """
+        self.initialize_flow_calculations()
+        self.initialize_timeseries()
 
     def initialize_flow_calculations(self, channel_n=None, fp_k=None, fp_P=None,
                                             stage_offset=None, use_Rh=None ):
@@ -165,7 +190,7 @@ class RiverWidth(object):
                                 self.h_banks, self.b[-1], self.S)
 
 
-    def initialize_timeseries(self, t, Q):
+    def initialize_timeseries(self, t=None, Q=None):
         self.t = list(t)
         self.Q = list(Q)
 
