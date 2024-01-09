@@ -72,6 +72,15 @@ class RiverWidth(object):
                     ['f_stickiness'] )
             
             # doublemanning-flow
+            self.manning2__n_ch = float( yamlparams['doublemanning-flow']
+                    ['n_ch'] )
+            self.manning2__k_fp = float( yamlparams['doublemanning-flow']
+                    ['k_fp'] )
+            self.manning2__P_fp = float( yamlparams['doublemanning-flow']
+                    ['P_fp'] )
+            self.manning2__stage_offset = float( 
+                    yamlparams['doublemanning-flow']['stage_at_Q=0'] )
+
             
             # output
             
