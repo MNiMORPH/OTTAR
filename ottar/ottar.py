@@ -10,49 +10,109 @@ class RiverWidth(object):
     Transient adjustments to river-channel width
     """
 
-    def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, k_E=None,
+    def __init__(self, yamlparams=None,
+                       h_banks=None, S=None, b0=None, tau_crit=None,
+                       k_d=None, k_E=None,
                        f_stickiness=0., k_n_noncohesive=0.,
                        Parker_epsilon=0.2, intermittency=1.,
-                       D=None, tau_star_crit_sed=0.0495):
+                       D=None, rho_s=2650.,
+                       tau_star_crit_sed=0.0495):
 
-        # Starting values (None) -- D in this too, but set in inputs
-        self.channel_n = None
-        self.tau_crit_sed = None
-        #self.u_star_crit_sed = None
+        if yamlparams is not None:
         
-        # Input variables
-        self.h_banks = h_banks
-        self.S = S
-        self.tau_crit = tau_crit # Critical stress to detach particles from bank
-        self.tau_crit_equilibrium = self.tau_crit # sets ultimate channel width
-        self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
-        self.k_E = k_E # Noncohesive substrate: entrainment-rate coefficient
-        self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
-                                         # of sediment transferred to bank that
-                                         # stays there & leads to narrowing 
-        self.k_n_noncohesive = k_n_noncohesive # narrowing coefficient for
-                                               # noncohesive seds:
-                                               # lateral velocity efficiency
-                                               # (how much eddy diffusion
-                                               # affects the bed?) + sticking
-        self.Parker_epsilon = Parker_epsilon
-        self.intermittency = intermittency
-        self.D = D # Grain diameter [m]
+            # Make it a class variable
+            self.yamlparams = yamlparams
+        
+            # timeseries
+            
+            
+            # morphology
+            self.S = yamlparams['morphology']['slope']
+            self.h_banks = yamlparams['morphology']['bank_height']
+            # Input variable as initial state in channel-width list
+            self.b = [ yamlparams['morphology']['initial_width'] ]
+            self.bi = self.b[-1]
+            # back to morphology
+            self.Parker_epsilon = yamlparams['morphology']['Parker_epsilon']
+            
+            # sediment
+            self.D = yamlparams['sediment']['grain_diameter']
+            self.rho_s = yamlparams['sediment']['sediment_density']
+            
+            # widening
+            self.tau_star_crit_sed = yamlparams['widening'] \
+                    ['critical_shields_stress_of_noncohesive_sediment']
+            self.tau_crit = yamlparams['widening'] \
+                    ['critical_detachment_shear_stress_for_cohesive_sediement']
+            self.k_E = yamlparams['widening'] \
+                    ['noncohesive_entrainment_coefficient__k_E']
+            self.k_d = yamlparams['widening'] \
+                    ['coehsive_detachment_coefficient__k_d']
+            
+            # narrowing
+            self.k_n_noncohesive = yamlparams['widening'] \
+                    ['trapping_and_holding_efficiency__k_n_noncohesive']
+            self.f_stickiness = yamlparams['widening'] \
+                    ['f_stickiness']
+            
+            # doublemanning-flow
+            
+            # output
+            
 
-        # Input variable as initial state in list
-        self.b = [b0]
-        self.bi = self.b[-1]
+            # VARIABLES THAT ARE NOT SET
+            self.intermittency = 1. # I might just remove this; save confusion
+            
+            
+        else:
+            if (h_banks is None) or (S is None) or (b0 is None):
+                print("\nAt muminum, h_banks, S, and b0 must be set.\n")
+                sys.exit(2)
 
-        # Constants
+            # Starting values (None) -- D in this too, but set in inputs
+            self.channel_n = None
+            self.tau_crit_sed = None
+            #self.u_star_crit_sed = None
+            
+            # Input variables
+            self.h_banks = h_banks
+            self.S = S
+            self.tau_crit = tau_crit # Critical stress to detach particles from bank
+            self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
+            self.k_E = k_E # Noncohesive substrate: entrainment-rate coefficient
+            self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
+                                             # of sediment transferred to bank that
+                                             # stays there & leads to narrowing 
+            self.k_n_noncohesive = k_n_noncohesive # narrowing coefficient for
+                                                   # noncohesive seds:
+                                                   # lateral velocity efficiency
+                                                   # (how much eddy diffusion
+                                                   # affects the bed?) + sticking
+            self.Parker_epsilon = Parker_epsilon
+            self.intermittency = intermittency
+            self.D = D # Grain diameter [m]
+
+            # Input variable as initial state in list
+            self.b = [b0]
+            self.bi = self.b[-1]
+
+            # For sediment (used in bed load calculations)
+            self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
+
+            self.rho_s = rho_s # Quartz density by default
+
+        #############
+        # CONSTANTS #
+        #############
         self.g = 9.807
         self.rho = 1000.
         self.porosity = 0.35
         # For sediment (used in bed load calculations)
-        self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
-        self.rho_s = 2650. # Quartz assumed
         self.SECONDS_IN_DAY = 86400
 
-        # Derived constants
+        #####################
+        # DERIVED CONSTANTS #
+        #####################
         if self.D is not None:
             self.tau_crit_sed = self.tau_star_crit_sed * \
                                   ( (self.rho_s - self.rho) * self.g * self.D)
@@ -79,15 +139,24 @@ class RiverWidth(object):
         # (Equals 1/(1+self.Parker_epsilon) * bed shear stress)
         self.tau_bank_series = [np.nan]
 
+    @classmethod
+    def from_yaml(cls, filepath):
+        # "cls" is the class itself!
+        # Thanks to Eric Hutton for sharing this magic
+        with open(filepath) as fp:
+            config = yaml.safe_load(fp)
+        return cls(**config)
+
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize_flow_calculations(self, channel_n, fp_k, fp_P,
-                                            stage_offset, use_Rh ):
+    def initialize_flow_calculations(self, channel_n=None, fp_k=None, fp_P=None,
+                                            stage_offset=None, use_Rh=None ):
         """
         Hard-code for double Manning
         """
+        #if self.yamlparams:
         self.channel_n = channel_n
         self.hclass = FlowDepthDoubleManning(use_Rh)
         self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
