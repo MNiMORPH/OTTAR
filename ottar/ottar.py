@@ -28,33 +28,34 @@ class RiverWidth(object):
             
             
             # morphology
-            self.S = yamlparams['morphology']['slope']
-            self.h_banks = yamlparams['morphology']['bank_height']
+            self.S = float( yamlparams['morphology']['slope'] )
+            self.h_banks = float( yamlparams['morphology']['bank_height'] )
             # Input variable as initial state in channel-width list
-            self.b = [ yamlparams['morphology']['initial_width'] ]
-            self.bi = self.b[-1]
+            self.b = [ float( yamlparams['morphology']['initial_width'] ) ]
+            self.bi = float( self.b[-1] )
             # back to morphology
-            self.Parker_epsilon = yamlparams['morphology']['Parker_epsilon']
+            self.Parker_epsilon = float( 
+                                  yamlparams['morphology']['Parker_epsilon'] )
             
             # sediment
-            self.D = yamlparams['sediment']['grain_diameter']
-            self.rho_s = yamlparams['sediment']['sediment_density']
+            self.D = float( yamlparams['sediment']['grain_diameter'] )
+            self.rho_s = float( yamlparams['sediment']['sediment_density'] )
             
             # widening
-            self.tau_star_crit_sed = yamlparams['widening'] \
-                    ['critical_shields_stress_of_noncohesive_sediment']
-            self.tau_crit = yamlparams['widening'] \
-                    ['critical_detachment_shear_stress_for_cohesive_sediement']
-            self.k_E = yamlparams['widening'] \
-                    ['noncohesive_entrainment_coefficient__k_E']
-            self.k_d = yamlparams['widening'] \
-                    ['coehsive_detachment_coefficient__k_d']
+            self.tau_star_crit_sed = float( yamlparams['widening'] 
+                  ['critical_shields_stress_of_noncohesive_sediment'] )
+            self.tau_crit = float( yamlparams['widening'] 
+                  ['critical_detachment_shear_stress_for_cohesive_sediement'] )
+            self.k_E = float( yamlparams['widening'] 
+                  ['noncohesive_entrainment_coefficient__k_E'] )
+            self.k_d = float( yamlparams['widening'] 
+                  ['coehsive_detachment_coefficient__k_d'] )
             
             # narrowing
-            self.k_n_noncohesive = yamlparams['narrowing'] \
-                    ['trapping_and_holding_efficiency__k_n_noncohesive']
-            self.f_stickiness = yamlparams['narrowing'] \
-                    ['f_stickiness']
+            self.k_n_noncohesive = float( yamlparams['narrowing'] 
+                    ['trapping_and_holding_efficiency__k_n_noncohesive'] )
+            self.f_stickiness = float( yamlparams['narrowing'] 
+                    ['f_stickiness'] )
             
             # doublemanning-flow
             
