@@ -1047,6 +1047,9 @@ class FlowDepthDoubleManning( object ):
         Not exactly updating anything, but to follow standard CSDMS I(U)RF
         """
         self.h = self.depth_from_discharge(Q)
+        if self.h < 0:
+            print("Warning: Negative flow depth predicted. Setting to 0.")
+            self.h = 0
         return self.h
 
     def run(self, Q=None):
