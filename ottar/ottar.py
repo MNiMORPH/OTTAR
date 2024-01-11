@@ -81,8 +81,9 @@ class RiverWidth(object):
                     yamlparams['doublemanning-flow']['stage_at_Q=0'] )
 
             
-            # output
-            
+            # output & plotting
+            # These are not parsed into variables, but rather taken directly
+            # from the dict produced by the YAML
 
             # VARIABLES THAT ARE NOT SET
             self.intermittency = 1. # I might just remove this; save confusion
@@ -195,10 +196,25 @@ class RiverWidth(object):
         self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
-
     def initialize_timeseries(self, t=None, Q=None):
-        self.t = list(t)
-        self.Q = list(Q)
+        if self.yamlparams is not None:
+            if (t is not None) and (Q is not None):
+                print("Overriding YAML-defined streamflow inputs")
+                self.t = list(t)
+                self.Q = list(Q)
+            else:
+                streamflow_data = pd.read_csv( self.streamflow_filename )
+                # Allow "mixed" format in case of irregular input data
+                self.t = list( pd.to_datetime( streamflow_data[
+                                  self.streamflow_datetime_column_name],
+                                  format='mixed' ) )
+                self.Q = list( streamflow_data[
+                                  self.streamflow_discharge_column_name] )
+        elif (t is not None) and (Q is not None):
+            self.t = list(t)
+            self.Q = list(Q)
+        else:
+            print("Failed to set t, Q.")
 
     def get_equilibriumWidth(self, Q_eq):
         """
