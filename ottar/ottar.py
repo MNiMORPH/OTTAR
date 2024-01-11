@@ -702,6 +702,10 @@ class RiverWidth(object):
         self.db_dt__day__widening_series = self.db_widening_series / dt_days
         self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
         
+        ##########
+        # OUTPUT #
+        ##########
+        
         if self.yamlparams is not None:
             if self.yamlparams['output']['output_csv_filename'] is not None:
                 self.write_csv( self.yamlparams['output']
@@ -935,6 +939,10 @@ class RiverWidth(object):
 ###############################
 ## FLOW DEPTH FROM DISCHARGE ##
 ###############################
+
+# This is an internal instance of "ForwardModel" from "doublemanning"
+# https://github.com/MNiMORPH/doublemanning
+
 
 from scipy.optimize import fsolve
 
