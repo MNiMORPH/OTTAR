@@ -59,7 +59,23 @@ doublemanning-flow:
         P_fp: 1.62
         stage_at_Q=0: 0.47 # [m]
 
+plotting:
+        # True to show on screen, False to not
+        show: True
+        # If not empty, save to this filename; format guessed from extension
+        # Currently, only one figure may be saved per run
+        saveas: lastfig.pdf
+        # Which kind of plots to generate? Boolean; blank defaults to false
+        width: False
+        discharge+width: True
+        widening+narrowing+stress: True
+        width+widening+narrowing+stress: False
+        discharge+width+widening+narrowing+stress: 
+        discharge+width+widening+narrowing+grain-stress-ratio:
+
 output:
         # Save data to this file?
-        output_series: 
+        # If it doesn't have the ".csv" extension, this will be appended
+        output_csv_filename: width_simulated_MinnesotaJordan.csv
+        
         

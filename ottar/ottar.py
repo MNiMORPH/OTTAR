@@ -19,11 +19,10 @@ class RiverWidth(object):
                        D=None, rho_s=2650.,
                        tau_star_crit_sed=0.0495):
 
+        # Make yamlparams (or lack thereof) a class variable
+        self.yamlparams = yamlparams
+    
         if yamlparams is not None:
-        
-            # Make it a class variable
-            self.yamlparams = yamlparams
-        
             # streamflow
             self.streamflow_filename = str( yamlparams['streamflow']
                     ['filename'] )
@@ -87,8 +86,6 @@ class RiverWidth(object):
 
             # VARIABLES THAT ARE NOT SET
             self.intermittency = 1. # I might just remove this; save confusion
-            
-            
             
             
         else:
@@ -667,6 +664,10 @@ class RiverWidth(object):
 
         """
         
+        ##########################################
+        # FINAL DATA PROCESSING AND ORGANIZATION #
+        ##########################################
+        
         # Generate numpy arrays of equal length
         self.t = np.array(self.t)
         self.b = np.array(self.b)
@@ -700,6 +701,42 @@ class RiverWidth(object):
         dt_days = np.hstack(( [np.nan], dt_days ))
         self.db_dt__day__widening_series = self.db_widening_series / dt_days
         self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
+        
+        ############
+        # PLOTTING #
+        ############
+
+        # If a YAML file is used, check whether plots should be generated
+        # Empty lines default to False when recast from NoneType to Boolean
+        if self.yamlparams is not None:
+            if bool( self.yamlparams['plotting']
+                  ['width'] ):
+                self.plotb()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width'] ):
+                self.plotQb()
+            if bool( self.yamlparams['plotting']
+                  ['widening+narrowing+stress'] ):
+                self.plotWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['width+widening+narrowing+stress'] ):
+                self.plotWidthWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width+widening+narrowing+stress'] ):
+                self.plotDischargeWidthWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width+widening+narrowing+grain-stress-ratio'] ):
+                self.plotDischargeWidthWideningNarrowingGrainstressratio()
+        
+            # Then check whether they should be saved and/or shown
+            # Currently, only one figure may be saved per run
+            if self.yamlparams['plotting']['saveas'] is not None:
+                plt.savefig( self.yamlparams['plotting']['saveas'] )
+                
+            # Then see if we should show the figure(s)
+            if bool( self.yamlparams['plotting']['show'] ):
+                plt.show()
+                
 
     def plotb(self):
         """
@@ -721,7 +758,9 @@ class RiverWidth(object):
         plt.ylabel('Channel width [m]')
         #plt.legend(loc='lower right')
         plt.tight_layout()
-        plt.show()
+        # Show here by default if not running with a YAML configfile
+        if self.yamlparams is None:
+            plt.show()
         
     def plotQb(self, tdata=None, bdata=None):
         """
@@ -745,7 +784,8 @@ class RiverWidth(object):
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
         
     def plotWideningNarrowingStress(self, legend_loc=None):
         """
@@ -769,7 +809,9 @@ class RiverWidth(object):
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotWidthWideningNarrowingStress(self, legend_loc=None):
         """
@@ -798,7 +840,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotDischargeWidthWideningNarrowingStress(self, legend_loc=None):
         """
@@ -831,7 +875,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotDischargeWidthWideningNarrowingGrainstressratio(self, legend_loc=None):
         """
@@ -864,7 +910,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def write_csv(self, filename):
         """
