@@ -130,3 +130,7 @@ dmypy.json
 
 # Temporary files
 *.swp
+
+# OTTAR outputs
+*.pdf
+*.csv
