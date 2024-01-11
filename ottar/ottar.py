@@ -71,15 +71,15 @@ class RiverWidth(object):
                     ['f_stickiness'] )
             
             # doublemanning-flow
-            self.manning2__n_ch = float( yamlparams['doublemanning-flow']
+            self.channel_n = float( yamlparams['doublemanning-flow']
                     ['n_ch'] )
-            self.manning2__k_fp = float( yamlparams['doublemanning-flow']
+            self.fp_k = float( yamlparams['doublemanning-flow']
                     ['k_fp'] )
-            self.manning2__P_fp = float( yamlparams['doublemanning-flow']
+            self.fp_P = float( yamlparams['doublemanning-flow']
                     ['P_fp'] )
-            self.manning2__stage_offset = float( 
+            self.stage_offset = float( 
                     yamlparams['doublemanning-flow']['stage_at_Q=0'] )
-
+            self.use_Rh = yamlparams['doublemanning-flow']['use_Rh']
             
             # output & plotting
             # These are not parsed into variables, but rather taken directly
@@ -117,13 +117,12 @@ class RiverWidth(object):
             self.intermittency = intermittency
             self.D = D # Grain diameter [m]
 
-            # Input variable as initial state in list
+            # Input width as initial state in list
             self.b = [b0]
             self.bi = self.b[-1]
 
             # For sediment (used in bed load calculations)
             self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
-
             self.rho_s = rho_s # Quartz density by default
 
         #############
@@ -191,9 +190,18 @@ class RiverWidth(object):
         Hard-code for double Manning
         """
         #if self.yamlparams:
-        self.channel_n = channel_n
-        self.hclass = FlowDepthDoubleManning(use_Rh)
-        self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
+        if self.yamlparams is not None:
+            # Already defined vars above
+            pass
+        else:
+            self.channel_n = channel_n
+            self.fp_k = fp_k
+            self.fp_P = fp_P
+            self.stage_offset = stage_offset
+            self.use_Rh = use_Rh
+        self.hclass = FlowDepthDoubleManning(self.use_Rh)
+        self.hclass.initialize( self.channel_n, self.fp_k, self.fp_P,
+                                self.stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
     def initialize_timeseries(self, t=None, Q=None):
@@ -1006,6 +1014,7 @@ class FlowDepthDoubleManning( object ):
         (self.Q) shared across the class.
         """
         # flow depth
+        stage = stage[0]
         h = stage - self.stage_offset
         # Does the flow go overbank?
         ob = h > self.h_bank

@@ -3,12 +3,13 @@
 # A Wickert, 08 Jan 2024
 
 streamflow:
-        # STREAMFLOW FILE
-        # Column default names:
-        #   - Date
+        # STREAMFLOW FILE: CSV expected
+        # Possible column names:
+        #   - Date or Timestamp
         #   - Discharge [m^3/s]
-        filename: MN_Jordan_daily.csv
-        datetime_column_name: Date
+        # It may have other columns as long as it has these
+        filename: MN_Jordan_daily__including_Metric.csv
+        datetime_column_name: Timestamp
         discharge_column_name: Discharge [m^3/s]
 widthdata: 
         # CHANNEL-WIDTH DATA FILE (optional)
@@ -58,6 +59,7 @@ doublemanning-flow:
         k_fp: 138 # [m$^(3-P_fp) / s]
         P_fp: 1.62
         stage_at_Q=0: 0.47 # [m]
+        use_Rh: True # Use hydraulic radius (instead of just flow depth)
 
 plotting:
         # True to show on screen, False to not

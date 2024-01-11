@@ -24,8 +24,7 @@ rw = ottar.RiverWidth.from_yaml('config.yaml')
 t = streamflowData['Timestamp']
 Q = streamflowData['Discharge (cfs)'] * cfs_to_m3s
 
-rw.initialize_flow_calculations( 0.034, 138., 1.62,
-                                  stage_offset=0.47, use_Rh=True )
+rw.initialize_flow_calculations(  )
 
 rw.initialize_timeseries(t, Q)
 rw.run()
