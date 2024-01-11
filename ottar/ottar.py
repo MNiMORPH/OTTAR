@@ -570,7 +570,7 @@ class RiverWidth(object):
         dt_outer = dt
         bi_outer = self.b[-1]
         self.hclass.set_b( bi_outer )
-        h = self.hclass.compute_depth( Qi )
+        h = self.hclass.depth_from_discharge( Qi )
         # Use depth, not hydraulic radius, because the Parker_eposilon
         # factor is intended to convert the channel-centerline stress 
         # into a near-bank stress.
@@ -617,7 +617,7 @@ class RiverWidth(object):
         self.dt = dt
         # Current discharge and shear stress
         # Is this updated for the rating-curve 2x Manning approach?
-        h = self.hclass.compute_depth( Qi )
+        h = self.hclass.depth_from_discharge( Qi )
         self.tau_bank = self.rho * self.g * h * self.S \
                 / (1 + self.Parker_epsilon)
         self.h = h # For the widening, at least for now
@@ -630,7 +630,7 @@ class RiverWidth(object):
         self.h_series.append(h) # h is based on previous b but associated with
                                 # the discharge that created current b
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
-        #print(self.hclass.compute_depth( 500. ))
+        #print(self.hclass.depth_from_discharge( 500. ))
         self.tau_bank_series.append( self.tau_bank )
 
     def run(self):
@@ -940,8 +940,9 @@ class RiverWidth(object):
 ## FLOW DEPTH FROM DISCHARGE ##
 ###############################
 
-# This is an internal instance of "ForwardModel" from "doublemanning"
+# This is an internal copy of "ForwardModel" from "doublemanning".
 # https://github.com/MNiMORPH/doublemanning
+# The IRF methods are built specifically for OTTAR.
 
 
 from scipy.optimize import fsolve
@@ -979,7 +980,15 @@ class FlowDepthDoubleManning( object ):
     def set_Q(self, _var):
         self.Q = _var
 
-    def flow_depth_from_Manning_discharge( self, stage ):
+    def _stage_from_discharge_rootfinder( self, stage ):
+        """
+        Returns a function whose root gives the river stage at the discharge
+        set by the class variable self.Q
+        
+        The passed "stage" variable starts with an initial guess and then
+        is computed towards convergence using "fsolve", with discharge
+        (self.Q) shared across the class.
+        """
         # flow depth
         h = stage - self.stage_offset
         # Does the flow go overbank?
@@ -991,13 +1000,13 @@ class FlowDepthDoubleManning( object ):
         return self.b/self.n * _r**(5/3.) * self.S**0.5 \
                   + ob*self.k*(h-self.h_bank)**(ob*self.P) - self.Q
 
-    def compute_depth(self, Q=None):
+    def depth_from_discharge(self, Q=None):
         if Q is not None:
             self.Q = Q
         if Q == 0:
             return 0
         else:
-            return fsolve( self.flow_depth_from_Manning_discharge, 1. )[0]
+            return fsolve( self._stage_from_discharge_rootfinder, 1. )[0]
 
     def initialize(self, n, k, P, stage_offset, h_bank, b, S):
         self.set_n(n)
@@ -1012,7 +1021,7 @@ class FlowDepthDoubleManning( object ):
         """
         Not exactly updating anything, but to follow standard CSDMS I(U)RF
         """
-        self.h = self.compute_depth(Q)
+        self.h = self.depth_from_discharge(Q)
         return self.h
 
     def run(self, Q=None):
