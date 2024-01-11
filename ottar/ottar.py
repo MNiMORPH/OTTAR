@@ -702,6 +702,11 @@ class RiverWidth(object):
         self.db_dt__day__widening_series = self.db_widening_series / dt_days
         self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
         
+        if self.yamlparams is not None:
+            if self.yamlparams['output']['output_csv_filename'] is not None:
+                self.write_csv( self.yamlparams['output']
+                                               ['output_csv_filename'] )
+
         ############
         # PLOTTING #
         ############
