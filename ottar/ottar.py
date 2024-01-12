@@ -151,6 +151,9 @@ class RiverWidth(object):
         else:
             self.equilibrium_width_set_by_cohesion = False
 
+        ####################
+        # LISTS FOR SERIES #
+        ####################
         # Initialize list for all calculated flow depths
         self.h_series = [np.nan]
         
