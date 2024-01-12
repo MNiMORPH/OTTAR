@@ -492,7 +492,8 @@ class RiverWidth(object):
         if self.bi < 0:
             print("ERROR: Channel width < 0!")
             self.bi = 0
-            raise ValueError('Negative flow depth given: Nonphysical.')            
+            print("Channel has vanished. Holding width at 0.")
+            #raise ValueError('Negative flow depth given: Nonphysical.')            
         if self.h == 0:
             # No water in channel (!)
             print("Note: No water in channel.")
