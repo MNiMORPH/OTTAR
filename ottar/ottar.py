@@ -165,7 +165,36 @@ class RiverWidth(object):
         # And a series for the shear stress on the banks
         # (Equals 1/(1+self.Parker_epsilon) * bed shear stress)
         self.tau_bank_series = [np.nan]
+    
+    ############################################
+    # SETTERS, INCLUDING DERIVED-VALUE UPDATES #
+    ############################################
+    # Here, starting with just those needed for parameter estimation via DAKOTA
+    def set_initial_width(self, value):
+        self.b = [value]
+        self.bi = self.b[-1]
         
+    def set_cohesive_detachment_coefficient(self, value):
+        self.k_d = value
+    
+    def set_noncohesive_entrainment_coefficient(self, value):
+        self.k_E = value
+    
+    def set_coehsive_bank_stickiness(self, value):
+        """
+        Fraction of material that sticks: 0 to 1
+        """
+        self.f_stickiness = value
+    
+    def set_noncohesive_narrowing_coefficient(self, value):
+        """
+        Diffusion + sticking
+        """
+        self.k_n_noncohesive = value
+    
+    #############################################################
+    # INITIALIZE, RUN, FINALIZE, AND PHYSICAL PROCESS FUNCTIONS #
+    #############################################################
     @classmethod
     def from_yaml(cls, filepath):
         # "cls" is the class itself!
