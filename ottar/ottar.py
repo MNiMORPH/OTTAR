@@ -4,55 +4,139 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 import warnings
+import yaml
 
 class RiverWidth(object):
     """
     Transient adjustments to river-channel width
     """
 
-    def __init__(self, h_banks, S, b0, tau_crit=None, k_d=None, k_E=None,
+    def __init__(self, yamlparams=None,
+                       h_banks=None, S=None, b0=None, tau_crit=None,
+                       k_d=None, k_E=None,
                        f_stickiness=0., k_n_noncohesive=0.,
                        Parker_epsilon=0.2, intermittency=1.,
-                       D=None, tau_star_crit_sed=0.0495):
+                       D=None, rho_s=2650.,
+                       tau_star_crit_sed=0.0495):
 
-        # Starting values (None) -- D in this too, but set in inputs
-        self.channel_n = None
-        self.tau_crit_sed = None
-        #self.u_star_crit_sed = None
-        
-        # Input variables
-        self.h_banks = h_banks
-        self.S = S
-        self.tau_crit = tau_crit # Critical stress to detach particles from bank
-        self.tau_crit_equilibrium = self.tau_crit # sets ultimate channel width
-        self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
-        self.k_E = k_E # Noncohesive substrate: entrainment-rate coefficient
-        self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
-                                         # of sediment transferred to bank that
-                                         # stays there & leads to narrowing 
-        self.k_n_noncohesive = k_n_noncohesive # narrowing coefficient for
-                                               # noncohesive seds:
-                                               # lateral velocity efficiency
-                                               # (how much eddy diffusion
-                                               # affects the bed?) + sticking
-        self.Parker_epsilon = Parker_epsilon
-        self.intermittency = intermittency
-        self.D = D # Grain diameter [m]
+        # Make yamlparams (or lack thereof) a class variable
+        self.yamlparams = yamlparams
+    
+        if yamlparams is not None:
+            # streamflow
+            self.streamflow_filename = str( yamlparams['streamflow']
+                    ['filename'] )
+            self.streamflow_datetime_column_name = str( yamlparams['streamflow']
+                    ['datetime_column_name'] )
+            self.streamflow_discharge_column_name = str( yamlparams['streamflow']
+                    ['discharge_column_name'] )
+            
+            # widthdata
+            # (optional, for comparison of model & data)
+            self.widthdata_filename = str( yamlparams['widthdata']
+                    ['filename'] )
+            self.widthdata_datetime_column_name = str( yamlparams['widthdata']
+                    ['datetime_column_name'] )
+            self.widthdata_discharge_column_name = str( yamlparams['widthdata']
+                    ['discharge_column_name'] )
+            
+            # morphology
+            self.S = float( yamlparams['morphology']['slope'] )
+            self.h_banks = float( yamlparams['morphology']['bank_height'] )
+            # Input variable as initial state in channel-width list
+            self.b = [ float( yamlparams['morphology']['initial_width'] ) ]
+            self.bi = float( self.b[-1] )
+            # back to morphology
+            self.Parker_epsilon = float( 
+                                  yamlparams['morphology']['Parker_epsilon'] )
+            
+            # sediment
+            self.D = float( yamlparams['sediment']['grain_diameter'] )
+            self.rho_s = float( yamlparams['sediment']['sediment_density'] )
+            
+            # widening
+            self.tau_star_crit_sed = float( yamlparams['widening'] 
+                  ['critical_shields_stress_of_noncohesive_sediment'] )
+            self.tau_crit = float( yamlparams['widening'] 
+                  ['critical_detachment_shear_stress_for_cohesive_sediement'] )
+            self.k_E = float( yamlparams['widening'] 
+                  ['noncohesive_entrainment_coefficient__k_E'] )
+            self.k_d = float( yamlparams['widening'] 
+                  ['coehsive_detachment_coefficient__k_d'] )
+            
+            # narrowing
+            self.k_n_noncohesive = float( yamlparams['narrowing'] 
+                    ['trapping_and_holding_efficiency__k_n_noncohesive'] )
+            self.f_stickiness = float( yamlparams['narrowing'] 
+                    ['f_stickiness'] )
+            
+            # doublemanning-flow
+            self.channel_n = float( yamlparams['doublemanning-flow']
+                    ['n_ch'] )
+            self.fp_k = float( yamlparams['doublemanning-flow']
+                    ['k_fp'] )
+            self.fp_P = float( yamlparams['doublemanning-flow']
+                    ['P_fp'] )
+            self.stage_offset = float( 
+                    yamlparams['doublemanning-flow']['stage_at_Q=0'] )
+            self.use_Rh = yamlparams['doublemanning-flow']['use_Rh']
+            
+            # output & plotting
+            # These are not parsed into variables, but rather taken directly
+            # from the dict produced by the YAML
 
-        # Input variable as initial state in list
-        self.b = [b0]
-        self.bi = self.b[-1]
+            # VARIABLES THAT ARE NOT SET
+            self.intermittency = 1. # I might just remove this; save confusion
+            
+            
+        else:
+            if (h_banks is None) or (S is None) or (b0 is None):
+                print("\nAt muminum, h_banks, S, and b0 must be set.\n")
+                sys.exit(2)
 
-        # Constants
+            # Starting values (None) -- D in this too, but set in inputs
+            self.channel_n = None
+            self.tau_crit_sed = None
+            #self.u_star_crit_sed = None
+            
+            # Input variables
+            self.h_banks = h_banks
+            self.S = S
+            self.tau_crit = tau_crit # Critical stress to detach particles from bank
+            self.k_d = k_d # Cohesive substrate: detachment-rate coefficient
+            self.k_E = k_E # Noncohesive substrate: entrainment-rate coefficient
+            self.f_stickiness = f_stickiness # Cohesive bank "stickiness": fraction
+                                             # of sediment transferred to bank that
+                                             # stays there & leads to narrowing 
+            self.k_n_noncohesive = k_n_noncohesive # narrowing coefficient for
+                                                   # noncohesive seds:
+                                                   # lateral velocity efficiency
+                                                   # (how much eddy diffusion
+                                                   # affects the bed?) + sticking
+            self.Parker_epsilon = Parker_epsilon
+            self.intermittency = intermittency
+            self.D = D # Grain diameter [m]
+
+            # Input width as initial state in list
+            self.b = [b0]
+            self.bi = self.b[-1]
+
+            # For sediment (used in bed load calculations)
+            self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
+            self.rho_s = rho_s # Quartz density by default
+
+        #############
+        # CONSTANTS #
+        #############
         self.g = 9.807
         self.rho = 1000.
         self.porosity = 0.35
         # For sediment (used in bed load calculations)
-        self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
-        self.rho_s = 2650. # Quartz assumed
         self.SECONDS_IN_DAY = 86400
 
-        # Derived constants
+        #####################
+        # DERIVED CONSTANTS #
+        #####################
         if self.D is not None:
             self.tau_crit_sed = self.tau_star_crit_sed * \
                                   ( (self.rho_s - self.rho) * self.g * self.D)
@@ -67,6 +151,9 @@ class RiverWidth(object):
         else:
             self.equilibrium_width_set_by_cohesion = False
 
+        ####################
+        # LISTS FOR SERIES #
+        ####################
         # Initialize list for all calculated flow depths
         self.h_series = [np.nan]
         
@@ -78,25 +165,67 @@ class RiverWidth(object):
         # And a series for the shear stress on the banks
         # (Equals 1/(1+self.Parker_epsilon) * bed shear stress)
         self.tau_bank_series = [np.nan]
+        
+    @classmethod
+    def from_yaml(cls, filepath):
+        # "cls" is the class itself!
+        # Thanks to Eric Hutton for sharing this magic
+        with open(filepath) as fp:
+            config = yaml.safe_load(fp)
+        return cls(config)
 
     def dynamic_time_step(self, max_fract_to_equilib=0.1):
         # Currently part of a big, messy "update" step
         pass
 
-    def initialize_flow_calculations(self, channel_n, fp_k, fp_P,
-                                            stage_offset, use_Rh ):
+    def initialize(self):
+        """
+        Using the YAML params file:
+        * set up flow calculations
+        * import time-series data
+        """
+        self.initialize_flow_calculations()
+        self.initialize_timeseries()
+
+    def initialize_flow_calculations(self, channel_n=None, fp_k=None, fp_P=None,
+                                            stage_offset=None, use_Rh=None ):
         """
         Hard-code for double Manning
         """
-        self.channel_n = channel_n
-        self.hclass = FlowDepthDoubleManning(use_Rh)
-        self.hclass.initialize( channel_n, fp_k, fp_P, stage_offset,
+        #if self.yamlparams:
+        if self.yamlparams is not None:
+            # Already defined vars above
+            pass
+        else:
+            self.channel_n = channel_n
+            self.fp_k = fp_k
+            self.fp_P = fp_P
+            self.stage_offset = stage_offset
+            self.use_Rh = use_Rh
+        self.hclass = FlowDepthDoubleManning(self.use_Rh)
+        self.hclass.initialize( self.channel_n, self.fp_k, self.fp_P,
+                                self.stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
-
-    def initialize_timeseries(self, t, Q):
-        self.t = list(t)
-        self.Q = list(Q)
+    def initialize_timeseries(self, t=None, Q=None):
+        if self.yamlparams is not None:
+            if (t is not None) and (Q is not None):
+                print("Overriding YAML-defined streamflow inputs")
+                self.t = list(t)
+                self.Q = list(Q)
+            else:
+                streamflow_data = pd.read_csv( self.streamflow_filename )
+                # Allow "mixed" format in case of irregular input data
+                self.t = list( pd.to_datetime( streamflow_data[
+                                  self.streamflow_datetime_column_name],
+                                  format='mixed' ) )
+                self.Q = list( streamflow_data[
+                                  self.streamflow_discharge_column_name] )
+        elif (t is not None) and (Q is not None):
+            self.t = list(t)
+            self.Q = list(Q)
+        else:
+            print("Failed to set t, Q.")
 
     def get_equilibriumWidth(self, Q_eq):
         """
@@ -468,7 +597,7 @@ class RiverWidth(object):
         dt_outer = dt
         bi_outer = self.b[-1]
         self.hclass.set_b( bi_outer )
-        h = self.hclass.compute_depth( Qi )
+        h = self.hclass.depth_from_discharge( Qi )
         # Use depth, not hydraulic radius, because the Parker_eposilon
         # factor is intended to convert the channel-centerline stress 
         # into a near-bank stress.
@@ -515,7 +644,7 @@ class RiverWidth(object):
         self.dt = dt
         # Current discharge and shear stress
         # Is this updated for the rating-curve 2x Manning approach?
-        h = self.hclass.compute_depth( Qi )
+        h = self.hclass.depth_from_discharge( Qi )
         self.tau_bank = self.rho * self.g * h * self.S \
                 / (1 + self.Parker_epsilon)
         self.h = h # For the widening, at least for now
@@ -528,7 +657,7 @@ class RiverWidth(object):
         self.h_series.append(h) # h is based on previous b but associated with
                                 # the discharge that created current b
         self.b.append(self.bi + self.db_widening - self.db_narrowing)
-        #print(self.hclass.compute_depth( 500. ))
+        #print(self.hclass.depth_from_discharge( 500. ))
         self.tau_bank_series.append( self.tau_bank )
 
     def run(self):
@@ -561,6 +690,10 @@ class RiverWidth(object):
         Width[[new]]
 
         """
+        
+        ##########################################
+        # FINAL DATA PROCESSING AND ORGANIZATION #
+        ##########################################
         
         # Generate numpy arrays of equal length
         self.t = np.array(self.t)
@@ -595,6 +728,51 @@ class RiverWidth(object):
         dt_days = np.hstack(( [np.nan], dt_days ))
         self.db_dt__day__widening_series = self.db_widening_series / dt_days
         self.db_dt__day__narrowing_series = self.db_narrowing_series / dt_days
+        
+        ##########
+        # OUTPUT #
+        ##########
+        
+        if self.yamlparams is not None:
+            if self.yamlparams['output']['output_csv_filename'] is not None:
+                self.write_csv( self.yamlparams['output']
+                                               ['output_csv_filename'] )
+
+        ############
+        # PLOTTING #
+        ############
+
+        # If a YAML file is used, check whether plots should be generated
+        # Empty lines default to False when recast from NoneType to Boolean
+        if self.yamlparams is not None:
+            if bool( self.yamlparams['plotting']
+                  ['width'] ):
+                self.plotb()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width'] ):
+                self.plotQb()
+            if bool( self.yamlparams['plotting']
+                  ['widening+narrowing+stress'] ):
+                self.plotWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['width+widening+narrowing+stress'] ):
+                self.plotWidthWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width+widening+narrowing+stress'] ):
+                self.plotDischargeWidthWideningNarrowingStress()
+            if bool( self.yamlparams['plotting']
+                  ['discharge+width+widening+narrowing+grain-stress-ratio'] ):
+                self.plotDischargeWidthWideningNarrowingGrainstressratio()
+        
+            # Then check whether they should be saved and/or shown
+            # Currently, only one figure may be saved per run
+            if self.yamlparams['plotting']['saveas'] is not None:
+                plt.savefig( self.yamlparams['plotting']['saveas'] )
+                
+            # Then see if we should show the figure(s)
+            if bool( self.yamlparams['plotting']['show'] ):
+                plt.show()
+                
 
     def plotb(self):
         """
@@ -616,7 +794,9 @@ class RiverWidth(object):
         plt.ylabel('Channel width [m]')
         #plt.legend(loc='lower right')
         plt.tight_layout()
-        plt.show()
+        # Show here by default if not running with a YAML configfile
+        if self.yamlparams is None:
+            plt.show()
         
     def plotQb(self, tdata=None, bdata=None):
         """
@@ -640,7 +820,8 @@ class RiverWidth(object):
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
         
     def plotWideningNarrowingStress(self, legend_loc=None):
         """
@@ -664,7 +845,9 @@ class RiverWidth(object):
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotWidthWideningNarrowingStress(self, legend_loc=None):
         """
@@ -693,7 +876,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotDischargeWidthWideningNarrowingStress(self, legend_loc=None):
         """
@@ -726,7 +911,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def plotDischargeWidthWideningNarrowingGrainstressratio(self, legend_loc=None):
         """
@@ -759,7 +946,9 @@ class RiverWidth(object):
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
         plt.tight_layout()
-        plt.show()
+        if self.yamlparams is None:
+            plt.show()
+
         
     def write_csv(self, filename):
         """
@@ -777,6 +966,11 @@ class RiverWidth(object):
 ###############################
 ## FLOW DEPTH FROM DISCHARGE ##
 ###############################
+
+# This is an internal copy of "ForwardModel" from "doublemanning".
+# https://github.com/MNiMORPH/doublemanning
+# The IRF methods are built specifically for OTTAR.
+
 
 from scipy.optimize import fsolve
 
@@ -813,8 +1007,17 @@ class FlowDepthDoubleManning( object ):
     def set_Q(self, _var):
         self.Q = _var
 
-    def flow_depth_from_Manning_discharge( self, stage ):
+    def _stage_from_discharge_rootfinder( self, stage ):
+        """
+        Returns a function whose root gives the river stage at the discharge
+        set by the class variable self.Q
+        
+        The passed "stage" variable starts with an initial guess and then
+        is computed towards convergence using "fsolve", with discharge
+        (self.Q) shared across the class.
+        """
         # flow depth
+        stage = stage[0]
         h = stage - self.stage_offset
         # Does the flow go overbank?
         ob = h > self.h_bank
@@ -825,13 +1028,13 @@ class FlowDepthDoubleManning( object ):
         return self.b/self.n * _r**(5/3.) * self.S**0.5 \
                   + ob*self.k*(h-self.h_bank)**(ob*self.P) - self.Q
 
-    def compute_depth(self, Q=None):
+    def depth_from_discharge(self, Q=None):
         if Q is not None:
             self.Q = Q
         if Q == 0:
             return 0
         else:
-            return fsolve( self.flow_depth_from_Manning_discharge, 1. )[0]
+            return fsolve( self._stage_from_discharge_rootfinder, 1. )[0]
 
     def initialize(self, n, k, P, stage_offset, h_bank, b, S):
         self.set_n(n)
@@ -846,7 +1049,10 @@ class FlowDepthDoubleManning( object ):
         """
         Not exactly updating anything, but to follow standard CSDMS I(U)RF
         """
-        self.h = self.compute_depth(Q)
+        self.h = self.depth_from_discharge(Q)
+        if self.h < 0:
+            print("Warning: Negative flow depth predicted. Setting to 0.")
+            self.h = 0
         return self.h
 
     def run(self, Q=None):
