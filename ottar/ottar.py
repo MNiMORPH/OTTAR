@@ -942,6 +942,13 @@ class RiverWidth(object):
             ax3.set_xlabel('Date', fontsize=16)
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            print(self.widthdata_datetime_column_name)
+            print(self.widthdata_discharge_column_name)
+            ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                      self.obs[self.widthdata_discharge_column_name],
+                      'o', color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
@@ -977,6 +984,13 @@ class RiverWidth(object):
             ax3.set_xlabel('Date', fontsize=16)
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            print(self.widthdata_datetime_column_name)
+            print(self.widthdata_discharge_column_name)
+            ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                      self.obs[self.widthdata_discharge_column_name],
+                      'o', color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
@@ -1012,6 +1026,13 @@ class RiverWidth(object):
             ax3.set_xlabel('Date', fontsize=16)
         else:
             ax3.set_xlabel('Days since start', fontsize=16)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            print(self.widthdata_datetime_column_name)
+            print(self.widthdata_discharge_column_name)
+            ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                      self.obs[self.widthdata_discharge_column_name],
+                      'o', color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
