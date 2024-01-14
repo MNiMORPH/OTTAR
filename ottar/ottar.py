@@ -24,12 +24,12 @@ class RiverWidth(object):
     
         if yamlparams is not None:
             # streamflow
-            self.streamflow_filename = str( yamlparams['streamflow']
-                    ['filename'] )
-            self.streamflow_datetime_column_name = str( yamlparams['streamflow']
-                    ['datetime_column_name'] )
-            self.streamflow_discharge_column_name = str( yamlparams['streamflow']
-                    ['discharge_column_name'] )
+            self.streamflow_filename = yamlparams['streamflow'] \
+                    ['filename']
+            self.streamflow_datetime_column_name = yamlparams['streamflow'] \
+                    ['datetime_column_name']
+            self.streamflow_discharge_column_name = yamlparams['streamflow'] \
+                    ['discharge_column_name']
             
             # widthdata
             # (optional, for comparison of model & data)
