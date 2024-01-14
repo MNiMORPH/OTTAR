@@ -184,7 +184,7 @@ class RiverWidth(object):
         Critical detachment shear stress for cohesive sediments
         (Here used for bank material)
         """
-        self.tau_crit
+        self.tau_crit = value
 
     def set_cohesive_detachment_coefficient(self, value):
         self.k_d = value
