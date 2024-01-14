@@ -33,12 +33,12 @@ class RiverWidth(object):
             
             # widthdata
             # (optional, for comparison of model & data)
-            self.widthdata_filename = str( yamlparams['widthdata']
-                    ['filename'] )
-            self.widthdata_datetime_column_name = str( yamlparams['widthdata']
-                    ['datetime_column_name'] )
-            self.widthdata_discharge_column_name = str( yamlparams['widthdata']
-                    ['discharge_column_name'] )
+            self.widthdata_filename = yamlparams['widthdata'] \
+                    ['filename']
+            self.widthdata_datetime_column_name = yamlparams['widthdata'] \
+                    ['datetime_column_name']
+            self.widthdata_discharge_column_name = yamlparams['widthdata'] \
+                    ['discharge_column_name']
             
             # morphology
             self.S = float( yamlparams['morphology']['slope'] )
@@ -124,6 +124,11 @@ class RiverWidth(object):
             # For sediment (used in bed load calculations)
             self.tau_star_crit_sed = tau_star_crit_sed # Default: Wong & Parker 06
             self.rho_s = rho_s # Quartz density by default
+            
+            # Wihtout YAML, no widthdata passed
+            self.widthdata_filename = None
+            self.widthdata_datetime_column_name = None
+            self.streamflow_discharge_column_name = None
 
         #############
         # CONSTANTS #
@@ -221,7 +226,8 @@ class RiverWidth(object):
         * import time-series data
         """
         self.initialize_flow_calculations()
-        self.initialize_timeseries()
+        self.initialize_discharge_timeseries()
+        self.initialize_widthdata_timeseries()
 
     def initialize_flow_calculations(self, channel_n=None, fp_k=None, fp_P=None,
                                             stage_offset=None, use_Rh=None ):
@@ -243,7 +249,7 @@ class RiverWidth(object):
                                 self.stage_offset,
                                 self.h_banks, self.b[-1], self.S)
 
-    def initialize_timeseries(self, t=None, Q=None):
+    def initialize_discharge_timeseries(self, t=None, Q=None):
         if self.yamlparams is not None:
             if (t is not None) and (Q is not None):
                 print("Overriding YAML-defined streamflow inputs")
@@ -262,6 +268,16 @@ class RiverWidth(object):
             self.Q = list(Q)
         else:
             print("Failed to set t, Q.")
+
+    def initialize_widthdata_timeseries(self, t=None, Q=None):
+        if self.widthdata_filename is not None:
+            if len(self.widthdata_filename) > 0:
+                self.obs = pd.read_csv( self.widthdata_filename,
+                           parse_dates=[self.widthdata_datetime_column_name] )
+            else:
+                self.obs = None
+        else:
+            self.obs = None
 
     def get_equilibriumWidth(self, Q_eq):
         """
@@ -827,6 +843,13 @@ class RiverWidth(object):
         #           '.5', label='Equilibrium width', linewidth=2)
         plt.plot(_t, self.b, 'k-', label='Transient width',
                  linewidth=2)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            print(self.widthdata_datetime_column_name)
+            print(self.widthdata_discharge_column_name)
+            plt.plot( self.obs[self.widthdata_datetime_column_name],
+                      self.obs[self.widthdata_discharge_column_name],
+                      'o', color='.5' )
         plt.xlabel('Time [days of flood]')
         plt.ylabel('Channel width [m]')
         #plt.legend(loc='lower right')
@@ -852,6 +875,13 @@ class RiverWidth(object):
             ax1.plot(tdata, bdata, 'o', color='0.5')
         ax2.plot(_t, self.Q)
         ax2.set_ylabel('Discharge [m$^3$ s$^{-1}$]', fontsize=16)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            print(self.widthdata_datetime_column_name)
+            print(self.widthdata_discharge_column_name)
+            ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                      self.obs[self.widthdata_discharge_column_name],
+                      'o', color='.5' )
         if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
             ax2.set_xlabel('Date', fontsize=16)
         else:
