@@ -39,6 +39,8 @@ class RiverWidth(object):
                     ['datetime_column_name']
             self.widthdata_discharge_column_name = yamlparams['widthdata'] \
                     ['width_column_name']
+            self.widthdata_error_column_name = yamlparams['widthdata'] \
+                    ['widtherror_column_name']
             
             # morphology
             self.S = float( yamlparams['morphology']['slope'] )
@@ -879,17 +881,25 @@ class RiverWidth(object):
             ax1.plot(tdata, bdata, 'o', color='0.5')
         ax2.plot(_t, self.Q)
         ax2.set_ylabel('Discharge [m$^3$ s$^{-1}$]', fontsize=16)
-        # Plot observations if they have been provided
-        if self.obs is not None:
-            print(self.widthdata_datetime_column_name)
-            print(self.widthdata_discharge_column_name)
-            ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                      self.obs[self.widthdata_discharge_column_name],
-                      'o', color='.5' )
         if type(self.t[0]) == pd._libs.tslibs.timestamps.Timestamp:
             ax2.set_xlabel('Date', fontsize=16)
         else:
             ax2.set_xlabel('Days since start', fontsize=16)
+        # Plot observations if they have been provided
+        if self.obs is not None:
+            if self.widthdata_error_column_name is None:
+                ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                          self.obs[self.widthdata_discharge_column_name],
+                          'o', color='.5' )
+            else:
+                ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
+                              y=self.obs[self.widthdata_discharge_column_name],
+                              yerr=self.obs[self.widthdata_error_column_name],
+                              ecolor='.5',
+                              elinewidth=2,
+                              capsize=0,
+                              fmt='o',
+                              color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
