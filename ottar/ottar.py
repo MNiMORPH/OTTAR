@@ -1121,12 +1121,20 @@ class FlowDepthDoubleManning( object ):
                   + ob*self.k*(h-self.h_bank)**(ob*self.P) - self.Q
 
     def depth_from_discharge(self, Q=None):
+        """
+        Compute flow depth using an iterative approach held within
+        "_stage_from_discharge_rootfinder"
+        """
         if Q is not None:
             self.Q = Q
         if Q == 0:
-            return 0
+            self.h = 0
         else:
-            return fsolve( self._stage_from_discharge_rootfinder, 1. )[0]
+            # Hard-coded initial guess of stage = self.stage_offset + 1 m
+            self.h = fsolve( self._stage_from_discharge_rootfinder,
+                              self.stage_offset+1. )[0] \
+                        - self.stage_offset
+        return self.h
 
     def initialize(self, n, k, P, stage_offset, h_bank, b, S):
         self.set_n(n)
