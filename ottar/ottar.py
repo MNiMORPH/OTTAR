@@ -256,7 +256,9 @@ class RiverWidth(object):
                 self.t = list(t)
                 self.Q = list(Q)
             else:
-                streamflow_data = pd.read_csv( self.streamflow_filename )
+                # Infer delimiter
+                streamflow_data = pd.read_csv( self.streamflow_filename,
+                                               sep=None )
                 # Allow "mixed" format in case of irregular input data
                 self.t = list( pd.to_datetime( streamflow_data[
                                   self.streamflow_datetime_column_name],
@@ -272,8 +274,10 @@ class RiverWidth(object):
     def initialize_widthdata_timeseries(self, t=None, Q=None):
         if self.widthdata_filename is not None:
             if len(self.widthdata_filename) > 0:
+                # Infer delimiter
                 self.obs = pd.read_csv( self.widthdata_filename,
-                           parse_dates=[self.widthdata_datetime_column_name] )
+                           parse_dates=[self.widthdata_datetime_column_name],
+                           sep=None)
             else:
                 self.obs = None
         else:
