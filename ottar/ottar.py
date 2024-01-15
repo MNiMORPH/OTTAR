@@ -38,7 +38,7 @@ class RiverWidth(object):
             self.widthdata_datetime_column_name = yamlparams['widthdata'] \
                     ['datetime_column_name']
             self.widthdata_discharge_column_name = yamlparams['widthdata'] \
-                    ['discharge_column_name']
+                    ['width_column_name']
             
             # morphology
             self.S = float( yamlparams['morphology']['slope'] )
