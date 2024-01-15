@@ -260,7 +260,7 @@ class RiverWidth(object):
             else:
                 # Infer delimiter
                 streamflow_data = pd.read_csv( self.streamflow_filename,
-                                               sep=None )
+                                               sep=None, engine='python' )
                 # Allow "mixed" format in case of irregular input data
                 self.t = list( pd.to_datetime( streamflow_data[
                                   self.streamflow_datetime_column_name],
@@ -279,7 +279,7 @@ class RiverWidth(object):
                 # Infer delimiter
                 self.obs = pd.read_csv( self.widthdata_filename,
                            parse_dates=[self.widthdata_datetime_column_name],
-                           sep=None)
+                           sep=None, engine='python')
             else:
                 self.obs = None
         else:
