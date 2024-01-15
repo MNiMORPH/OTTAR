@@ -850,15 +850,23 @@ class RiverWidth(object):
         plt.plot(_t, self.b, 'k-', label='Transient width',
                  linewidth=2)
         # Plot observations if they have been provided
-        if self.obs is not None:
-            print(self.widthdata_datetime_column_name)
-            print(self.widthdata_discharge_column_name)
-            plt.plot( self.obs[self.widthdata_datetime_column_name],
-                      self.obs[self.widthdata_discharge_column_name],
-                      'o', color='.5' )
         plt.xlabel('Time [days of flood]')
         plt.ylabel('Channel width [m]')
         #plt.legend(loc='lower right')
+        if self.obs is not None:
+            if self.widthdata_error_column_name is None:
+                ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                          self.obs[self.widthdata_discharge_column_name],
+                          'o', color='.5' )
+            else:
+                ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
+                              y=self.obs[self.widthdata_discharge_column_name],
+                              yerr=self.obs[self.widthdata_error_column_name],
+                              ecolor='.5',
+                              elinewidth=2,
+                              capsize=0,
+                              fmt='o',
+                              color='.5' )
         plt.tight_layout()
         # Show here by default if not running with a YAML configfile
         if self.yamlparams is None:
@@ -958,11 +966,19 @@ class RiverWidth(object):
             ax3.set_xlabel('Days since start', fontsize=16)
         # Plot observations if they have been provided
         if self.obs is not None:
-            print(self.widthdata_datetime_column_name)
-            print(self.widthdata_discharge_column_name)
-            ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                      self.obs[self.widthdata_discharge_column_name],
-                      'o', color='.5' )
+            if self.widthdata_error_column_name is None:
+                ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                          self.obs[self.widthdata_discharge_column_name],
+                          'o', color='.5' )
+            else:
+                ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
+                              y=self.obs[self.widthdata_discharge_column_name],
+                              yerr=self.obs[self.widthdata_error_column_name],
+                              ecolor='.5',
+                              elinewidth=2,
+                              capsize=0,
+                              fmt='o',
+                              color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
@@ -1000,11 +1016,19 @@ class RiverWidth(object):
             ax3.set_xlabel('Days since start', fontsize=16)
         # Plot observations if they have been provided
         if self.obs is not None:
-            print(self.widthdata_datetime_column_name)
-            print(self.widthdata_discharge_column_name)
-            ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                      self.obs[self.widthdata_discharge_column_name],
-                      'o', color='.5' )
+            if self.widthdata_error_column_name is None:
+                ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                          self.obs[self.widthdata_discharge_column_name],
+                          'o', color='.5' )
+            else:
+                ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
+                              y=self.obs[self.widthdata_discharge_column_name],
+                              yerr=self.obs[self.widthdata_error_column_name],
+                              ecolor='.5',
+                              elinewidth=2,
+                              capsize=0,
+                              fmt='o',
+                              color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
@@ -1042,11 +1066,19 @@ class RiverWidth(object):
             ax3.set_xlabel('Days since start', fontsize=16)
         # Plot observations if they have been provided
         if self.obs is not None:
-            print(self.widthdata_datetime_column_name)
-            print(self.widthdata_discharge_column_name)
-            ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                      self.obs[self.widthdata_discharge_column_name],
-                      'o', color='.5' )
+            if self.widthdata_error_column_name is None:
+                ax1.plot( self.obs[self.widthdata_datetime_column_name],
+                          self.obs[self.widthdata_discharge_column_name],
+                          'o', color='.5' )
+            else:
+                ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
+                              y=self.obs[self.widthdata_discharge_column_name],
+                              yerr=self.obs[self.widthdata_error_column_name],
+                              ecolor='.5',
+                              elinewidth=2,
+                              capsize=0,
+                              fmt='o',
+                              color='.5' )
         plt.tight_layout()
         if self.yamlparams is None:
             plt.show()
