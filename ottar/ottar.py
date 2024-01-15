@@ -37,7 +37,7 @@ class RiverWidth(object):
                     ['filename']
             self.widthdata_datetime_column_name = yamlparams['widthdata'] \
                     ['datetime_column_name']
-            self.widthdata_discharge_column_name = yamlparams['widthdata'] \
+            self.widthdata_width_column_name = yamlparams['widthdata'] \
                     ['width_column_name']
             self.widthdata_error_column_name = yamlparams['widthdata'] \
                     ['widtherror_column_name']
@@ -856,11 +856,11 @@ class RiverWidth(object):
         if self.obs is not None:
             if self.widthdata_error_column_name is None:
                 ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                          self.obs[self.widthdata_discharge_column_name],
+                          self.obs[self.widthdata_width_column_name],
                           'o', color='.5' )
             else:
                 ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
-                              y=self.obs[self.widthdata_discharge_column_name],
+                              y=self.obs[self.widthdata_width_column_name],
                               yerr=self.obs[self.widthdata_error_column_name],
                               ecolor='.5',
                               elinewidth=2,
@@ -897,11 +897,11 @@ class RiverWidth(object):
         if self.obs is not None:
             if self.widthdata_error_column_name is None:
                 ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                          self.obs[self.widthdata_discharge_column_name],
+                          self.obs[self.widthdata_width_column_name],
                           'o', color='.5' )
             else:
                 ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
-                              y=self.obs[self.widthdata_discharge_column_name],
+                              y=self.obs[self.widthdata_width_column_name],
                               yerr=self.obs[self.widthdata_error_column_name],
                               ecolor='.5',
                               elinewidth=2,
@@ -968,11 +968,11 @@ class RiverWidth(object):
         if self.obs is not None:
             if self.widthdata_error_column_name is None:
                 ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                          self.obs[self.widthdata_discharge_column_name],
+                          self.obs[self.widthdata_width_column_name],
                           'o', color='.5' )
             else:
                 ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
-                              y=self.obs[self.widthdata_discharge_column_name],
+                              y=self.obs[self.widthdata_width_column_name],
                               yerr=self.obs[self.widthdata_error_column_name],
                               ecolor='.5',
                               elinewidth=2,
@@ -1018,11 +1018,11 @@ class RiverWidth(object):
         if self.obs is not None:
             if self.widthdata_error_column_name is None:
                 ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                          self.obs[self.widthdata_discharge_column_name],
+                          self.obs[self.widthdata_width_column_name],
                           'o', color='.5' )
             else:
                 ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
-                              y=self.obs[self.widthdata_discharge_column_name],
+                              y=self.obs[self.widthdata_width_column_name],
                               yerr=self.obs[self.widthdata_error_column_name],
                               ecolor='.5',
                               elinewidth=2,
@@ -1068,11 +1068,11 @@ class RiverWidth(object):
         if self.obs is not None:
             if self.widthdata_error_column_name is None:
                 ax1.plot( self.obs[self.widthdata_datetime_column_name],
-                          self.obs[self.widthdata_discharge_column_name],
+                          self.obs[self.widthdata_width_column_name],
                           'o', color='.5' )
             else:
                 ax1.errorbar( x=self.obs[self.widthdata_datetime_column_name],
-                              y=self.obs[self.widthdata_discharge_column_name],
+                              y=self.obs[self.widthdata_width_column_name],
                               yerr=self.obs[self.widthdata_error_column_name],
                               ecolor='.5',
                               elinewidth=2,
