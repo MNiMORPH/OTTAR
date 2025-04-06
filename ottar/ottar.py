@@ -277,7 +277,7 @@ class RiverWidth(object):
         else:
             print("Failed to set t, Q.")
 
-    def initialize_widthdata_timeseries(self, t=None, Q=None):
+    def initialize_widthdata_timeseries(self):
         if self.widthdata_filename is not None:
             if len(self.widthdata_filename) > 0:
                 # Infer delimiter
