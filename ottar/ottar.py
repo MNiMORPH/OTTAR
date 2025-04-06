@@ -131,6 +131,7 @@ class RiverWidth(object):
             self.widthdata_filename = None
             self.widthdata_datetime_column_name = None
             self.streamflow_discharge_column_name = None
+            self.obs = None
 
         #############
         # CONSTANTS #
