@@ -246,6 +246,10 @@ class RiverWidth(object):
             self.fp_P = fp_P
             self.stage_offset = stage_offset
             self.use_Rh = use_Rh
+            if self.stage_offset is None:
+                warnings.warn("Setting undefined stage_offset to 0",
+                              RuntimeWarning)
+                self.stage_offset = 0.
         self.hclass = FlowDepthDoubleManning(self.use_Rh)
         self.hclass.initialize( self.channel_n, self.fp_k, self.fp_P,
                                 self.stage_offset,
