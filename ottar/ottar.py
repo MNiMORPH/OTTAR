@@ -37,6 +37,8 @@ class RiverWidth(object):
                     ['filename']
             self.widthdata_datetime_column_name = yamlparams['widthdata'] \
                     ['datetime_column_name']
+            print( yamlparams['widthdata'] )
+            print( yamlparams['widthdata']['width_column_name'] )
             self.widthdata_width_column_name = yamlparams['widthdata'] \
                     ['width_column_name']
             self.widthdata_error_column_name = yamlparams['widthdata'] \
@@ -423,6 +425,10 @@ class RiverWidth(object):
             #              required to attain concentration)
 
             # WHAT TO DO IF CONC > 1?
+            # I currently do not cap this, which implies that more than
+            # one grain per unit surface area is in motion.
+            # I do cap this for narrowing and lateral fluxes.
+            # Is this a problem?
             
             t_flight = 10.6 * (self.D / 
                                 ( (self.rho_s - self.rho)/self.rho)
